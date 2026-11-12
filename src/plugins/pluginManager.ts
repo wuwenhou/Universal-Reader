@@ -14,6 +14,7 @@ import NativeFile from '@modules/native-file';
 import { showToast } from '@utils/showToast';
 import { LEGACY_PLUGIN_STORAGE, PLUGIN_STORAGE } from '@utils/Storages';
 import { getMMKVObject, setMMKVObject } from '@utils/mmkv/mmkv';
+import { safeJsonParse } from '@utils/safeJson';
 import { INSTALLED_PLUGINS_KEY } from './constants';
 
 import {
@@ -27,6 +28,11 @@ import { defaultCover } from './helpers/constants';
 import { downloadFile, fetchApi, fetchProto, fetchText } from './helpers/fetch';
 import { FilterTypes } from './types/filterTypes';
 import { isUrlAbsolute } from './helpers/isAbsoluteUrl';
+import {
+  getPlugin as getRegisteredPlugin,
+  getPlugins as getRegisteredPlugins,
+  setPlugin as setRegisteredPlugin,
+} from './registry';
 
 const packages: Record<string, any> = {
   'htmlparser2': { Parser },
@@ -87,7 +93,6 @@ const initPlugin = (pluginId: string, rawCode: string) => {
   }
 };
 
-const plugins: Record<string, Plugin | undefined> = {};
 export { INSTALLED_PLUGINS_KEY } from './constants';
 const PLUGIN_FILES = ['custom.js', 'custom.css', 'index.js'] as const;
 
@@ -133,7 +138,7 @@ const installPlugin = async (
   if (!plugin) {
     return undefined;
   }
-  let currentPlugin = plugins[plugin.id];
+  let currentPlugin = getRegisteredPlugin(plugin.id);
   if (!currentPlugin || newer(plugin.version, currentPlugin.version)) {
     // save plugin code;
     const pluginDir = `${PLUGIN_STORAGE}/${plugin.id}`;
@@ -152,14 +157,14 @@ const installPlugin = async (
       await NativeFile.unlink(customCSSPath);
     }
     await NativeFile.writeFile(pluginPath, rawCode);
-    plugins[plugin.id] = plugin;
+    setRegisteredPlugin(plugin.id, plugin);
     currentPlugin = plugin;
   }
   return currentPlugin;
 };
 
 const uninstallPlugin = async (_plugin: PluginItem) => {
-  plugins[_plugin.id] = undefined;
+  setRegisteredPlugin(_plugin.id, undefined);
   store.getAllKeys().forEach(key => {
     if (key.startsWith(_plugin.id)) {
       store.remove(key);
@@ -180,7 +185,11 @@ const fetchPlugins = async (): Promise<PluginItem[]> => {
   const allRepositories = await getEnabledRepositoriesFromDb();
 
   const repoPluginsRes = await Promise.allSettled(
-    allRepositories.map(({ url }) => fetch(url).then(res => res.json())),
+    allRepositories.map(({ url }) =>
+      fetch(url)
+        .then(res => res.text())
+        .then(text => safeJsonParse<PluginItem[]>(text, [])),
+    ),
   );
 
   repoPluginsRes.forEach(repoPlugins => {
@@ -199,22 +208,22 @@ const getPlugin = (pluginId: string) => {
     return undefined;
   }
 
-  return plugins[pluginId];
+  return getRegisteredPlugin(pluginId);
 };
 
 const loadPlugin = async (pluginId: string) => {
   if (pluginId === LOCAL_PLUGIN_ID) {
     return undefined;
   }
-  if (plugins[pluginId]) {
-    return plugins[pluginId];
+  if (getRegisteredPlugin(pluginId)) {
+    return getRegisteredPlugin(pluginId);
   }
 
   const filePath = `${PLUGIN_STORAGE}/${pluginId}/index.js`;
   try {
     const code = await NativeFile.readFile(filePath);
     const plugin = initPlugin(pluginId, code);
-    plugins[pluginId] = plugin;
+    setRegisteredPlugin(pluginId, plugin);
     return plugin;
   } catch {
     return undefined;
@@ -244,8 +253,8 @@ const reloadInstalledPlugins = async (): Promise<string[]> => {
   const installedPlugins =
     getMMKVObject<PluginItem[]>(INSTALLED_PLUGINS_KEY) || [];
 
-  Object.keys(plugins).forEach(pluginId => {
-    plugins[pluginId] = undefined;
+  Object.keys(getRegisteredPlugins()).forEach(pluginId => {
+    setRegisteredPlugin(pluginId, undefined);
   });
 
   const results = await Promise.all(

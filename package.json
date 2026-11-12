@@ -1,10 +1,10 @@
 {
-  "name": "lnreader",
-  "version": "2.1.4",
+  "name": "universal-reader",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev:android:release": "pnpm run generate:env:release && npx expo run:android --variant release",
-    "dev:android": "pnpm run generate:env:debug && npx expo run:android --app-id com.rajarsheechatterjee.LNReader.debug",
+    "dev:android": "pnpm run generate:env:debug && npx expo run:android --app-id com.wuwenhou.universalreader.debug",
     "dev:ios": "npx expo run:ios",
     "dev:start": "npx expo start",
     "dev:clean-start": "npx expo start --clear",
@@ -36,6 +36,7 @@
     "nix:emulator": "nix develop .#emulator --extra-experimental-features nix-command --extra-experimental-features flakes"
   },
   "dependencies": {
+    "@ghostery/adblocker": "2.20.3",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^3.3.3",
     "@noble/ciphers": "^2.2.0",

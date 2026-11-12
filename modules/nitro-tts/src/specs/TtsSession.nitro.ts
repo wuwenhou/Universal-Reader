@@ -48,6 +48,13 @@ export interface TtsSession
   updateSettings(settings: TtsSettings): Promise<void>;
 
   /**
+   * Stops playback after the given number of minutes.
+   *
+   * A value of `0` cancels a running timer.
+   */
+  setSleepTimer(minutes: number): Promise<void>;
+
+  /**
    * Observes playback-state changes.
    */
   addOnStateChangedListener(

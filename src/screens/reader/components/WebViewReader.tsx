@@ -26,8 +26,6 @@ import { getBatteryLevel } from 'react-native-device-info';
 import { PLUGIN_STORAGE } from '@utils/Storages';
 import { useChapterContext } from '../ChapterContext';
 import { ReaderSearchResult } from '../types';
-import { useTtsSession } from '../hooks/useTtsSession';
-import type { TtsSettings } from '@modules/nitro-tts';
 import { ChapterInfo } from '@database/types';
 import { Dialog } from '@components/Dialog';
 import { TextInput } from 'react-native-paper';
@@ -37,6 +35,10 @@ import {
   isChapterRefreshUrl,
   isPluginIssueReportUrl,
 } from '../utils/sanitizeChapterText';
+import { useAdblock } from '@hooks/useAdblock';
+import { adblockService } from '@services/adblock/adblockService';
+import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
+import { toNativeTtsSettings } from '@utils/tts';
 
 export type WebViewPostEvent = {
   type: string;
@@ -63,7 +65,8 @@ const onLogMessage = (payload: { nativeEvent: { data: string } }) => {
   }
 };
 
-/** Checks whether two TTS settings objects are equal */
+/**
+ * Checks whether two TTS settings objects are equal */
 const areTTSSettingsEqual = (
   a: ChapterReaderSettings['tts'],
   b: ChapterReaderSettings['tts'],
@@ -79,15 +82,6 @@ const areTTSSettingsEqual = (
     a.engine?.name === b.engine?.name
   );
 };
-
-const toNativeTtsSettings = (
-  settings: ChapterReaderSettings['tts'],
-): TtsSettings => ({
-  engineName: settings?.engine?.name,
-  voiceIdentifier: settings?.voice?.identifier,
-  rate: settings?.rate ?? 1,
-  pitch: settings?.pitch ?? 1,
-});
 
 /**
  * The adjacent chapters are resolved after the chapter itself is on screen, so
@@ -123,6 +117,27 @@ let lastKnownBatteryLevel = 0;
 const assetsUriPrefix = __DEV__
   ? 'http://localhost:8081/assets'
   : 'file:///android_asset';
+
+/**
+ * Content Security Policy for the reader page.
+ *
+ * The chapter is rendered from markup that came from the internet, so the
+ * page is not allowed to pull scripts, frames or objects from anywhere. Only
+ * images and media over HTTPS (plus `data:` for inline assets) are loaded.
+ */
+const readerCsp = [
+  "default-src 'none'",
+  "img-src 'self' data: blob: https: file:",
+  "media-src 'self' data: blob: https: file:",
+  "style-src 'self' 'unsafe-inline' file: https: http://localhost:8081",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' file: http://localhost:8081",
+  "font-src 'self' data: file:",
+  "connect-src 'self' https: file:",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
 
 const WebViewReader: React.FC<WebViewReaderProps> = ({
   onPress,
@@ -177,9 +192,49 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
     seekTo: seekTts,
     state: ttsState,
     updateSettings: updateTtsSettings,
-  } = useTtsSession();
+  } = useTtsPlayer();
 
   const { customJS, customCSS } = useCustomCode(initialReaderSettings);
+
+  const { ready: adblockReady, getCosmeticCss } = useAdblock();
+  const cosmeticCssRef = useRef('');
+
+  /**
+   * The cosmetic rules are injected after the page loaded instead of being
+   * baked into the document: the filter engine finishes building in the
+   * background, and rebuilding the document would reload the WebView and
+   * lose the reading position.
+   */
+  useEffect(() => {
+    if (!adblockReady) {
+      return;
+    }
+
+    const pageUrl = plugin?.site;
+    if (!pageUrl) {
+      return;
+    }
+
+    const css = getCosmeticCss(pageUrl);
+    cosmeticCssRef.current = css;
+
+    if (!css) {
+      return;
+    }
+
+    webViewRef.current?.injectJavaScript(`
+      (() => {
+        let style = document.getElementById('ln-adblock-cosmetic');
+        if (!style) {
+          style = document.createElement('style');
+          style.id = 'ln-adblock-cosmetic';
+          document.head.appendChild(style);
+        }
+        style.textContent = ${JSON.stringify(css)};
+        return true;
+      })();
+    `);
+  }, [adblockReady, getCosmeticCss, plugin?.site, webViewRef]);
 
   const {
     html: processedHtml,
@@ -325,6 +380,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
           <html dir="${readerDir}">
             <head>
               <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+              <meta http-equiv="Content-Security-Policy" content="${readerCsp}">
               <link rel="stylesheet" href="${assetsUriPrefix}/css/index.css">
               <link rel="stylesheet" href="${assetsUriPrefix}/css/pageReader.css">
               <link rel="stylesheet" href="${assetsUriPrefix}/css/toolWrapper.css">
@@ -471,7 +527,20 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
             refetch();
             return false;
           }
+          // Ad destinations are never opened inside the reader.
+          if (adblockService.isBlocked(url, { type: 'other' })) {
+            return false;
+          }
           return true;
+        }}
+        onRenderProcessGone={() => {
+          // The renderer was killed - usually by the system because the
+          // chapter used too much memory. Reloading the chapter is the only
+          // way back; without this the reader would show a blank page.
+          refetch();
+        }}
+        onContentProcessDidTerminate={() => {
+          refetch();
         }}
         onLoadEnd={() => {
           webViewRef.current?.injectJavaScript(
@@ -532,6 +601,9 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
                   novelName: novel?.name || 'Unknown',
                   chapterName: chapter.name,
                   coverUri: novel?.cover || undefined,
+                  chapterId: chapter.id,
+                  novelId: novel?.id,
+                  pluginId: novel?.pluginId,
                 },
                 toNativeTtsSettings(readerSettingsRef.current.tts),
               );

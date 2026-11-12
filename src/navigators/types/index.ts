@@ -30,6 +30,8 @@ export type RootStackParamList = {
     pluginId: string;
     isNovel?: boolean;
   };
+  Player: undefined;
+  PlayerToc: undefined;
 };
 
 export type BottomNavigatorParamList = {
@@ -81,6 +83,7 @@ export type SettingsStackParamList = {
   BackupSettings: undefined;
   AppearanceSettings: undefined;
   AdvancedSettings: undefined;
+  AdblockSettings: undefined;
   LibrarySettings: undefined;
   RespositorySettings: { url?: string } | undefined;
   CustomCode: undefined;

@@ -55,7 +55,7 @@ const AboutScreen = ({ navigation }: AboutScreenProps) => {
             title={getString('aboutScreen.whatsNew')}
             onPress={() =>
               Linking.openURL(
-                `https://github.com/lnreader/lnreader/releases/tag/v${version}`,
+                `https://github.com/wuwenhou/universal-reader/releases/tag/v${version}`,
               )
             }
             theme={theme}
@@ -63,8 +63,10 @@ const AboutScreen = ({ navigation }: AboutScreenProps) => {
           <List.Divider theme={theme} />
           <List.Item
             title={getString('aboutScreen.website')}
-            description="https://lnreader.app"
-            onPress={() => Linking.openURL('https://lnreader.app')}
+            description="https://github.com/wuwenhou/universal-reader"
+            onPress={() =>
+              Linking.openURL('https://github.com/wuwenhou/universal-reader')
+            }
             theme={theme}
           />
           <List.Item
@@ -75,9 +77,9 @@ const AboutScreen = ({ navigation }: AboutScreenProps) => {
           />
           <List.Item
             title={getString('aboutScreen.github')}
-            description="https://github.com/lnreader/lnreader"
+            description="https://github.com/wuwenhou/universal-reader"
             onPress={() =>
-              Linking.openURL('https://github.com/lnreader/lnreader')
+              Linking.openURL('https://github.com/wuwenhou/universal-reader')
             }
             theme={theme}
           />

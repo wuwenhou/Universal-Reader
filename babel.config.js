@@ -40,7 +40,7 @@ export default function (api) {
       [
         'inline-import',
         {
-          extensions: ['.sql'],
+          extensions: ['.sql', '.txt'],
         },
       ],
     ],

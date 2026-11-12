@@ -104,6 +104,16 @@ const SettingsScreen = ({ navigation }: SettingsScreenProps) => {
           theme={theme}
         />
         <List.Item
+          title={getString('adblockSettings')}
+          icon="shield-check"
+          onPress={() =>
+            navigation.navigate('SettingsStack', {
+              screen: 'AdblockSettings',
+            })
+          }
+          theme={theme}
+        />
+        <List.Item
           title={getString('genreStats.taxonomyTitle')}
           icon="tag-multiple-outline"
           onPress={() =>

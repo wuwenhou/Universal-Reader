@@ -7,6 +7,7 @@ import TrackerSettings from '../screens/settings/SettingsTrackerScreen';
 import ReaderSettings from '../screens/settings/SettingsReaderScreen/SettingsReaderScreen';
 import BackupSettings from '../screens/settings/SettingsBackupScreen';
 import AdvancedSettings from '../screens/settings/SettingsAdvancedScreen';
+import AdblockSettings from '../screens/settings/SettingsAdblockScreen';
 import GeneralSettings from '../screens/settings/SettingsGeneralScreen/SettingsGeneralScreen';
 import TaskQueue from '../screens/more/TaskQueueScreen';
 import Downloads from '../screens/more/DownloadsScreen';
@@ -43,12 +44,13 @@ const SettingsStack = () => {
       <Stack.Screen name="BackupSettings" component={BackupSettings} />
       <Stack.Screen name="AppearanceSettings" component={AppearanceSettings} />
       <Stack.Screen name="AdvancedSettings" component={AdvancedSettings} />
+      <Stack.Screen name="AdblockSettings" component={AdblockSettings} />
       <Stack.Screen
         name="RespositorySettings"
         component={RespositorySettings}
       />
       <Stack.Screen name="LibrarySettings" component={LibrarySettings} />
-<Stack.Screen name="CustomCode" component={SettingsCustomCode} />
+      <Stack.Screen name="CustomCode" component={SettingsCustomCode} />
       <Stack.Screen name="CodeSnippets" component={CodeSnippetsScreen} />
       <Stack.Screen name="GenreTaxonomy" component={GenreTaxonomyScreen} />
     </Stack.Navigator>

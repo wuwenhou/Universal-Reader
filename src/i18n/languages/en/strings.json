@@ -9,6 +9,19 @@
     "whatsNew": "What's new"
   },
   "advancedSettings": "Advanced",
+  "adblockSettings": "Ad blocking",
+  "adblockSettingsScreen": {
+    "enable": "Block ads and trackers",
+    "enableDesc": "Uses uBO-compatible filter lists to remove ads from chapters and block tracking requests. It cannot remove every ad, especially the ones served from the same site as the chapter.",
+    "blockedRequests": "Blocked requests",
+    "filterLists": "Filter lists",
+    "exceptions": "Site exceptions",
+    "noExceptions": "No sites are excluded from blocking.",
+    "addException": "Add a site",
+    "insecureSources": "Plain HTTP sources",
+    "noInsecureSources": "Every source is fetched over HTTPS.",
+    "addInsecureSource": "Allow a source over HTTP"
+  },
   "advancedSettingsScreen": {
     "cachedNovelsDeletedToast": "Cached novels deleted",
     "chapterInsertFailed": "chapter insert failed",
@@ -644,6 +657,18 @@
     "tracking": "Tracking",
     "unknownStatus": "Unknown status",
     "updatedToast": "Updated %{name}"
+  },
+  "playerScreen": {
+    "noChapter": "Nothing is playing",
+    "noSentence": "Start a chapter to listen to it.",
+    "seekBar": "Playback position",
+    "play": "Play",
+    "pause": "Pause",
+    "speed": "Speed",
+    "sleepTimer": "Sleep timer",
+    "sleepTimerRunning": "Sleep timer: %{count} min left",
+    "voice": "Voice",
+    "toc": "Chapters"
   },
   "readerScreen": {
     "bottomSheet": {

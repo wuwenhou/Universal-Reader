@@ -35,6 +35,13 @@ import { showToast } from '@utils/showToast';
 import { getString } from '@i18n/translations';
 import NativeVolumeButtonListener from '@modules/native-volume-button-listener';
 import NativeFile from '@modules/native-file';
+import { getPlugin } from '@plugins/registry';
+import { adblockService } from '@services/adblock/adblockService';
+import {
+  ChapterTooLargeError,
+  MAX_CHAPTER_HTML_LENGTH,
+  withTimeout,
+} from '../utils/limits';
 import { useNovelActions, useNovelValue } from '@screens/novel/NovelContext';
 import useTimeTracking from './useTimeTracking';
 import { useEventListener } from 'expo';
@@ -83,6 +90,12 @@ export default function useChapter(
   const { tracker } = useTracker();
   const { trackedNovel, updateAllTrackedNovels } = useTrackedNovel(novel.id);
   const { setImmersiveMode, showStatusAndNavBar } = useFullscreenMode();
+
+  /** The site the chapter came from - the page the ad filters apply to. */
+  const siteUrl = useMemo(
+    () => getPlugin(novel.pluginId)?.site ?? '',
+    [novel.pluginId],
+  );
 
   const { onUserInteraction, isTTSReadingRef } = useTimeTracking(
     chapter.id,
@@ -176,7 +189,6 @@ export default function useChapter(
     },
     [novel.pluginId],
   );
-
   /**
    * Returns render-ready (sanitized) chapter HTML, reusing the novel-scoped
    * cache. Sanitizing before caching keeps `sanitize-html` – which is the most
@@ -191,18 +203,32 @@ export default function useChapter(
         return cached;
       }
 
-      const pending = loadChapterText(chap).then(text => {
-        const sanitized = sanitizeChapterText(
-          novel.pluginId,
-          novel.name,
-          chap.name,
-          text,
-        );
-        if (!text.trim()) {
-          chapterTextCache.remove(chap.id);
-        }
-        return sanitized;
-      });
+      const pending = withTimeout(
+        loadChapterText(chap).then(async text => {
+          if (text.length > MAX_CHAPTER_HTML_LENGTH) {
+            throw new ChapterTooLargeError(
+              text.length,
+              MAX_CHAPTER_HTML_LENGTH,
+            );
+          }
+
+          const sanitized = sanitizeChapterText(
+            novel.pluginId,
+            novel.name,
+            chap.name,
+            text,
+          );
+          if (!text.trim()) {
+            chapterTextCache.remove(chap.id);
+          }
+
+          // The ad blocker needs its engine before it can strip resources
+          // from the chapter. The wait is bounded, so a slow engine never
+          // keeps the chapter from opening.
+          await adblockService.ensureReady();
+          return adblockService.filterChapter(sanitized, siteUrl).html;
+        }),
+      );
       chapterTextCache.write(chap.id, pending);
       // Never keep a failed load in the cache, otherwise a retry would
       // resolve instantly with the same failure.
@@ -210,7 +236,7 @@ export default function useChapter(
 
       return pending;
     },
-    [chapterTextCache, loadChapterText, novel.name, novel.pluginId],
+    [chapterTextCache, loadChapterText, novel.name, novel.pluginId, siteUrl],
   );
 
   const prefetchChapter = useCallback(

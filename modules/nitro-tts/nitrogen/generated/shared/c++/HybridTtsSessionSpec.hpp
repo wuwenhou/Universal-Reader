@@ -77,6 +77,7 @@ namespace margelo::nitro::nitrotts {
       virtual std::shared_ptr<Promise<void>> replayCurrent() = 0;
       virtual std::shared_ptr<Promise<void>> seekTo(double index) = 0;
       virtual std::shared_ptr<Promise<void>> updateSettings(const TtsSettings& settings) = 0;
+      virtual std::shared_ptr<Promise<void>> setSleepTimer(double minutes) = 0;
       virtual ListenerSubscription addOnStateChangedListener(const std::function<void(TtsPlaybackState /* state */)>& listener) = 0;
       virtual ListenerSubscription addOnProgressChangedListener(const std::function<void(const TtsProgress& /* progress */)>& listener) = 0;
       virtual ListenerSubscription addOnErrorListener(const std::function<void(const std::string& /* message */)>& listener) = 0;

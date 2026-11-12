@@ -222,6 +222,21 @@ namespace margelo::nitro::nitrotts {
       return __promise;
     }();
   }
+  std::shared_ptr<Promise<void>> JHybridTtsSessionSpec::setSleepTimer(double minutes) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* minutes */)>("setSleepTimer");
+    auto __result = method(_javaPart, minutes);
+    return [&]() {
+      auto __promise = Promise<void>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& /* unit */) {
+        __promise->resolve();
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
   ListenerSubscription JHybridTtsSessionSpec::addOnStateChangedListener(const std::function<void(TtsPlaybackState /* state */)>& listener) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JListenerSubscription>(jni::alias_ref<JFunc_void_TtsPlaybackState::javaobject> /* listener */)>("addOnStateChangedListener_cxx");
     auto __result = method(_javaPart, JFunc_void_TtsPlaybackState_cxx::fromCpp(listener));

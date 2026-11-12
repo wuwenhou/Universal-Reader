@@ -159,6 +159,14 @@ namespace margelo::nitro::nitrotts {
       auto __value = std::move(__result.value());
       return __value;
     }
+    inline std::shared_ptr<Promise<void>> setSleepTimer(double minutes) override {
+      auto __result = _swiftPart.setSleepTimer(std::forward<decltype(minutes)>(minutes));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
     inline ListenerSubscription addOnStateChangedListener(const std::function<void(TtsPlaybackState /* state */)>& listener) override {
       auto __result = _swiftPart.addOnStateChangedListener(listener);
       if (__result.hasError()) [[unlikely]] {

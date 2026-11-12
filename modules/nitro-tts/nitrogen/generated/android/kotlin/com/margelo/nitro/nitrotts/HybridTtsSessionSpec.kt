@@ -65,6 +65,10 @@ abstract class HybridTtsSessionSpec: HybridObject() {
   @Keep
   abstract fun updateSettings(settings: TtsSettings): Promise<Unit>
   
+  @DoNotStrip
+  @Keep
+  abstract fun setSleepTimer(minutes: Double): Promise<Unit>
+  
   abstract fun addOnStateChangedListener(listener: (state: TtsPlaybackState) -> Unit): ListenerSubscription
   
   @DoNotStrip

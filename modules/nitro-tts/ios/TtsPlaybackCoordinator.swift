@@ -17,6 +17,8 @@ final class TtsPlaybackCoordinator: NSObject, AVSpeechSynthesizerDelegate {
   private var settings = TtsSettings(engineName: nil, voiceIdentifier: nil, rate: 1, pitch: 1)
   private var state: TtsPlaybackState = .idle
   private var activeUtterance: AVSpeechUtterance?
+  private var sleepTimerWorkItem: DispatchWorkItem?
+  private var sleepTimerEndAt: Date?
 
   private lazy var remoteCommands = TtsRemoteCommandController(
     onPlay: { [weak self] in self?.play() },
@@ -84,6 +86,7 @@ final class TtsPlaybackCoordinator: NSObject, AVSpeechSynthesizerDelegate {
     currentIndex = 0
     metadata = nil
     state = .idle
+    cancelSleepTimer()
     nowPlaying.clear()
     emitState()
     try? AVAudioSession.sharedInstance().setActive(
@@ -130,6 +133,34 @@ final class TtsPlaybackCoordinator: NSObject, AVSpeechSynthesizerDelegate {
     if shouldResume {
       speakCurrent()
     }
+  }
+
+  /// Pauses playback after `minutes`. A value of `0` cancels a running timer.
+  func setSleepTimer(minutes: Int) {
+    precondition(Thread.isMainThread)
+    cancelSleepTimer()
+
+    guard minutes > 0 else { return }
+
+    sleepTimerEndAt = Date().addingTimeInterval(Double(minutes) * 60)
+    let workItem = DispatchWorkItem { [weak self] in
+      guard let self else { return }
+      self.sleepTimerWorkItem = nil
+      self.sleepTimerEndAt = nil
+      self.pause()
+    }
+    sleepTimerWorkItem = workItem
+
+    DispatchQueue.main.asyncAfter(
+      deadline: .now() + Double(minutes) * 60,
+      execute: workItem
+    )
+  }
+
+  private func cancelSleepTimer() {
+    sleepTimerWorkItem?.cancel()
+    sleepTimerWorkItem = nil
+    sleepTimerEndAt = nil
   }
 
   func addStateListener(

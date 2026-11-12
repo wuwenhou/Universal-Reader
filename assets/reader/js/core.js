@@ -188,7 +188,8 @@ window.tts = new (function () {
   this.elementsRead = 0;
   this.totalElements = 0;
   this.allReadableElements = []; // Store all readable elements at start
-  this.textQueue = []; // Flat list of normalized text for native fallback
+  this.textQueue = []; // Flat list of normalized sentences for native playback
+  this.sentenceElements = []; // Element index for every sentence in the queue
 
   this.readable = element => {
     const ele = element ?? this.currentElement;
@@ -316,12 +317,33 @@ window.tts = new (function () {
       }))
       .filter(entry => !!entry.text);
     this.allReadableElements = readableEntries.map(entry => entry.element);
-    this.totalElements = this.allReadableElements.length;
-    this.textQueue = readableEntries.map(entry => entry.text);
+
+    // The queue is built from sentences, not paragraphs, so the listening
+    // player can seek to and display a single sentence. Every sentence keeps
+    // a reference to the element it came from, which is what the highlight
+    // follows.
+    const sentences = [];
+    const sentenceElements = [];
+    readableEntries.forEach((entry, elementIndex) => {
+      const parts = this.splitSentences(entry.text);
+      if (!parts.length) {
+        return;
+      }
+      parts.forEach(part => {
+        sentences.push(part);
+        sentenceElements.push(elementIndex);
+      });
+    });
+
+    this.textQueue = sentences;
+    this.sentenceElements = sentenceElements;
+    this.totalElements = sentences.length;
 
     const requestedIndex =
       element && element !== reader.chapterElement
-        ? this.allReadableElements.indexOf(startElement)
+        ? this.sentenceElements.indexOf(
+            this.allReadableElements.indexOf(startElement),
+          )
         : 0;
     const startIndex = requestedIndex >= 0 ? requestedIndex : 0;
 
@@ -354,6 +376,58 @@ window.tts = new (function () {
     };
     traverse(element);
     return elements;
+  };
+
+  /**
+   * Splits a paragraph into sentences.
+   *
+   * The punctuation stays with the sentence it ends and no empty sentence is
+   * produced, so the speech engine reads the text in the order it appears on
+   * the page.
+   */
+  this.splitSentences = text => {
+    if (!text) return [];
+
+    const parts = [];
+    let current = '';
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      current += char;
+
+      if (!'!.?…'.includes(char)) {
+        continue;
+      }
+
+      // A run of punctuation ("?!", "...") belongs to the same sentence.
+      while (i + 1 < text.length && '!.?…'.includes(text[i + 1])) {
+        current += text[i + 1];
+        i += 1;
+      }
+
+      // A closing quote or bracket right after the punctuation stays with
+      // the sentence it ends.
+      while (i + 1 < text.length && '"\'”’)]»'.includes(text[i + 1])) {
+        current += text[i + 1];
+        i += 1;
+      }
+
+      const next = text[i + 1];
+      if (next === undefined || /\s/.test(next)) {
+        const trimmed = current.trim();
+        if (trimmed) {
+          parts.push(trimmed);
+        }
+        current = '';
+      }
+    }
+
+    const rest = current.trim();
+    if (rest) {
+      parts.push(rest);
+    }
+
+    return parts;
   };
 
   this.resume = () => {
@@ -395,6 +469,7 @@ window.tts = new (function () {
     this.totalElements = 0;
     this.allReadableElements = [];
     this.textQueue = [];
+    this.sentenceElements = [];
     const playPauseButton = document.getElementById('TTS-PlayPause');
     if (playPauseButton) playPauseButton.innerHTML = resumeIcon;
     const progress = document.getElementById('TTS-Progress');
@@ -404,8 +479,13 @@ window.tts = new (function () {
   this.setActiveIndex = index => {
     if (!this.allReadableElements.length) return;
     const targetIndex = Math.max(0, Math.min(index, this.totalElements - 1));
+    // The queue holds sentences, the highlight follows the element a
+    // sentence came from.
+    const elementIndex = this.sentenceElements[targetIndex] ?? targetIndex;
+    const element = this.allReadableElements[elementIndex];
+    if (!element) return;
     this.currentElement?.classList?.remove('highlight');
-    this.currentElement = this.allReadableElements[targetIndex];
+    this.currentElement = element;
     this.elementsRead = targetIndex + 1;
     this.started = true;
     this.scrollToElement(this.currentElement);

@@ -1,9 +1,9 @@
 {
   "expo": {
-    "version": "2.1.4",
-    "name": "LNReader",
-    "slug": "LNReader",
-    "scheme": "lnreader",
+    "version": "0.3.0",
+    "name": "Universal Reader",
+    "slug": "universal-reader",
+    "scheme": "universalreader",
     "icon": "./assets/native/ic_launcher.png",
     "plugins": [
       "./plugins/withAndroidCustomizations",
@@ -56,8 +56,8 @@
       ]
     ],
     "android": {
-      "versionCode": 4196356,
-      "package": "com.rajarsheechatterjee.LNReader",
+      "versionCode": 3,
+      "package": "com.wuwenhou.universalreader",
       "adaptiveIcon": {
         "foregroundImage": "./assets/native/ic_launcher_foreground.png",
         "backgroundImage": "./assets/native/ic_launcher_background.png",
@@ -79,13 +79,8 @@
         }
       ]
     },
-    "extra": {
-      "eas": {
-        "projectId": "3a63596f-e80c-4342-96b7-a8ac48910489"
-      }
-    },
     "ios": {
-      "bundleIdentifier": "com.rajarsheechatterjee.LNReader",
+      "bundleIdentifier": "com.wuwenhou.universalreader",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       }

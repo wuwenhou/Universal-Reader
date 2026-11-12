@@ -1,54 +1,63 @@
 <p align="center">
-  <a href="https://lnreader.app">
+  <a href="https://github.com/wuwenhou/universal-reader">
     <img src="./.github/readme-images/icon_new.png" align="center" width="128" />
   </a>
 </p>
 
-<h1 align="center">LNReader</h1>
+<h1 align="center">Universal Reader</h1>
 
 <p align="center">
-  LNReader is a free and open source light novel reader for Android, inspired by Tachiyomi.
+  Universal Reader is a free and open source light novel reader for Android,
+  forked from LNReader.
 </p>
 
 <div align="center">
-  <a href="https://discord.gg/QdcWN4MD63">
-    <img alt="Discord Chat" src="https://img.shields.io/discord/835746409357246465.svg?logo=discord&logoColor=white&logoWidth=20&labelColor=5865F2&color=4752C4&label=discord&style=flat">
-  </a>
-  <a href="https://github.com/lnreader/lnreader/releases">
-    <img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/lnreader/lnreader/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat">
+  <a href="https://github.com/wuwenhou/universal-reader/releases">
+    <img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/wuwenhou/universal-reader/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat">
   </a>
 </div>
 
 <div align="center">
-  <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/lnreader/lnreader/build.yml?labelColor=27303D&style=flat">
-  <a href="https://github.com/lnreader/lnreader/blob/main/LICENSE">
-    <img alt="GitHub" src="https://img.shields.io/github/license/lnreader/lnreader?labelColor=27303D&color=1a73e8&style=flat">
-  </a>
-  <a title="Crowdin" target="_blank" href="https://crowdin.com/project/lnreader">
-    <img src="https://badges.crowdin.net/lnreader/localized.svg">
+  <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/wuwenhou/universal-reader/build.yml?labelColor=27303D&style=flat">
+  <a href="https://github.com/wuwenhou/universal-reader/blob/main/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/wuwenhou/universal-reader?labelColor=27303D&color=1a73e8&style=flat">
   </a>
 </div>
 
 <h2 align="center">Download</h2>
 
 <p align="center">
-  <a href="https://github.com/lnreader/lnreader/releases/latest">
-    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/lnreader/lnreader?label=Stable&labelColor=0d7377&color=084c4e&style=flat">
-  </a>
-  <a href="https://github.com/lnreader/lnreader/actions/workflows/build.yml">
-    <img alt="Build Preview" src="https://github.com/lnreader/lnreader/actions/workflows/build.yml/badge.svg">
+  <a href="https://github.com/wuwenhou/universal-reader/releases/latest">
+    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/wuwenhou/universal-reader?label=Stable&labelColor=0d7377&color=084c4e&style=flat">
   </a>
 </p>
 
 <p align="center">
-  Get the app from our <a href="https://github.com/lnreader/lnreader/releases">releases page</a>.
+  Get the app from the <a href="https://github.com/wuwenhou/universal-reader/releases">releases page</a>.
 </p>
 
 <p align="center">
   <em>Android 7.0 or higher.</em>
 </p>
 
-<h2 align="center">Screenshots</h2>
+## What this fork adds
+
+- **Ad blocking** built on [uBO-compatible filter lists][ghostery]. EasyList,
+  EasyPrivacy and ABPVN ship with the app and are applied to the chapter
+  markup, to the requests a plugin makes and to the links the reader opens.
+  Individual sites can be excluded in _Settings → Ad blocking_.
+- **A full screen listening player** with a sentence level text-to-speech
+  queue, a seek bar, a sleep timer, a speed and voice picker and a chapter
+  list, so the narration keeps running while the app is used elsewhere.
+- **A reader that survives bad chapters**: a chapter that fails to load, is
+  too large or makes the WebView crash now shows an error with a retry
+  button instead of closing the app.
+- **HTTPS only** by default, with an explicit exception list for sources
+  that have no HTTPS endpoint.
+
+[ghostery]: https://github.com/ghostery/adblocker
+
+## Screenshots
 
 <p align="center">
   <img src="./.github/readme-images/screenshots.png" align="center" />
@@ -56,13 +65,16 @@
 
 ## Plugins
 
-LNReader does not have any affiliation with the content providers available.
+Universal Reader does not have any affiliation with the content providers
+available.
 
-Plugin requests should be created at [lnreader-plugins](https://github.com/lnreader/lnreader-plugins).
+Plugin requests should be created at
+[lnreader-plugins](https://github.com/lnreader/lnreader-plugins).
 
 ## Translation
 
-Help translate LNReader into your language on [Crowdin](https://crowdin.com/project/lnreader).
+Help translate Universal Reader into your language on
+[Crowdin](https://crowdin.com/project/lnreader).
 
 ## Building & Contributing
 
@@ -70,4 +82,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## License
 
-[MIT](https://github.com/lnreader/lnreader/blob/main/LICENSE)
+[GPL-3.0](./LICENSE) — the fork is based on
+[LNReader](https://github.com/LNReader/lnreader), which is MIT licensed, and
+it bundles GPL-3.0 licensed filter lists. See [NOTICE](./NOTICE) for the
+details.

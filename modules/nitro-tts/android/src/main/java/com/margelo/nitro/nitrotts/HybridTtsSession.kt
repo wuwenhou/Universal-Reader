@@ -47,6 +47,9 @@ final class HybridTtsSession : HybridTtsSessionSpec() {
     override fun updateSettings(settings: TtsSettings): Promise<Unit> =
         MainThreadPromise.run { TtsPlaybackStore.updateSettings(settings) }
 
+    override fun setSleepTimer(minutes: Double): Promise<Unit> =
+        MainThreadPromise.run { TtsPlaybackStore.setSleepTimer(minutes.toInt()) }
+
     override fun addOnStateChangedListener(
         listener: (state: TtsPlaybackState) -> Unit,
     ): ListenerSubscription {

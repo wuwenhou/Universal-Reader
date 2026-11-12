@@ -1,0 +1,51 @@
+Universal Reader
+Copyright (C) 2024 wuwenhou
+
+This product is a fork of LNReader.
+
+LNReader
+Copyright (c) 2021 Rajarshee Chatterjee
+Licensed under the MIT License.
+
+The following files are derived from LNReader and remain under the MIT
+license:
+
+    src/api/**
+    src/components/**
+    src/database/**
+    src/hooks/**
+    src/i18n/**
+    src/navigators/**
+    src/plugins/**
+    src/screens/**
+    src/services/**
+    src/theme/**
+    src/utils/**
+    assets/**
+    modules/**
+
+Third party components
+----------------------
+
+@ghostery/adblocker
+    Mozilla Public License 2.0 (MPL-2.0)
+    https://github.com/ghostery/adblocker
+
+Bundled ad blocking filter lists
+---------------------------------
+
+EasyList
+    SPDX: GPL-3.0 OR CC-BY-SA-3.0
+    https://easylist.to/easylist/easylist.txt
+
+EasyPrivacy
+    SPDX: GPL-3.0 OR CC-BY-SA-3.0
+    https://easylist.to/easylist/easyprivacy.txt
+
+ABPVN
+    SPDX: GPL-3.0
+    https://abpvn.com/filter/abpvn_ublock.txt
+
+The filter lists are redistributed unmodified in `assets/adblock`. Because
+they are licensed under GPL-3.0, the application as a whole is distributed
+under GPL-3.0.

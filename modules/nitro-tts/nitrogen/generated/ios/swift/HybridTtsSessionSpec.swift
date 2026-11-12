@@ -22,6 +22,7 @@ public protocol HybridTtsSessionSpec_protocol: HybridObject {
   func replayCurrent() throws -> Promise<Void>
   func seekTo(index: Double) throws -> Promise<Void>
   func updateSettings(settings: TtsSettings) throws -> Promise<Void>
+  func setSleepTimer(minutes: Double) throws -> Promise<Void>
   func addOnStateChangedListener(listener: @escaping (_ state: TtsPlaybackState) -> Void) throws -> ListenerSubscription
   func addOnProgressChangedListener(listener: @escaping (_ progress: TtsProgress) -> Void) throws -> ListenerSubscription
   func addOnErrorListener(listener: @escaping (_ message: String) -> Void) throws -> ListenerSubscription

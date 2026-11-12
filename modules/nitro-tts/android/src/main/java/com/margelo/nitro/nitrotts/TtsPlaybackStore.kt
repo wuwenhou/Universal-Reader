@@ -38,6 +38,9 @@ internal object TtsPlaybackStore {
     private var hasAudioFocus = false
     private var resumeOnFocusGain = false
 
+    private var sleepTimerRunnable: Runnable? = null
+    private var sleepTimerEndAt: Long = 0L
+
     fun prepare(context: Context, completion: (Result<Unit>) -> Unit) {
         runOnOwner {
             applicationContext = context.applicationContext
@@ -196,6 +199,7 @@ internal object TtsPlaybackStore {
         metadata = null
         state = TtsPlaybackState.IDLE
         resumeOnFocusGain = false
+        cancelSleepTimer()
         abandonAudioFocus()
         emitState()
         applicationContext?.let { TtsPlaybackService.stop(it) }
@@ -320,6 +324,49 @@ internal object TtsPlaybackStore {
         if (shouldResume) {
             speakCurrent()
         }
+    }
+
+    /**
+     * Pauses playback after [minutes]. A value of `0` cancels a running timer.
+     *
+     * The timer lives here rather than in JavaScript so that it keeps running
+     * while the app is in the background, and so that it survives the WebView
+     * being torn down.
+     */
+    fun setSleepTimer(minutes: Int) {
+        cancelSleepTimer()
+
+        if (minutes <= 0) {
+            return
+        }
+
+        val durationMs = minutes.toLong() * 60_000L
+        sleepTimerEndAt = System.currentTimeMillis() + durationMs
+
+        val runnable = Runnable {
+            runOnOwner {
+                sleepTimerRunnable = null
+                sleepTimerEndAt = 0L
+                pause()
+            }
+        }
+
+        sleepTimerRunnable = runnable
+        ownerHandler.postDelayed(runnable, durationMs)
+    }
+
+    /** Milliseconds left on the sleep timer, or `0` when no timer runs. */
+    fun sleepTimerRemainingMs(): Long {
+        if (sleepTimerRunnable == null) {
+            return 0L
+        }
+        return (sleepTimerEndAt - System.currentTimeMillis()).coerceAtLeast(0L)
+    }
+
+    private fun cancelSleepTimer() {
+        sleepTimerRunnable?.let { ownerHandler.removeCallbacks(it) }
+        sleepTimerRunnable = null
+        sleepTimerEndAt = 0L
     }
 
     fun addStateListener(listener: (TtsPlaybackState) -> Unit): () -> Unit {

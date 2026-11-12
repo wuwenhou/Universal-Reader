@@ -64,7 +64,7 @@ describe('fetchPlugins', () => {
       .mocked(getEnabledRepositoriesFromDb)
       .mockResolvedValueOnce([{ id: 1, url: repositoryUrl, enabled: true }]);
     const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
-      json: async () => [plugin],
+      text: async () => JSON.stringify([plugin]),
     } as Response);
 
     await expect(fetchPlugins()).resolves.toEqual([plugin]);

@@ -8,6 +8,8 @@ import WebViewReader from './components/WebViewReader';
 import ReaderBottomSheetV2 from './components/ReaderBottomSheet/ReaderBottomSheet';
 import ChapterDrawer from './components/ChapterDrawer';
 import ChapterLoadingScreen from './ChapterLoadingScreen/ChapterLoadingScreen';
+import TtsMiniPlayer from './components/TtsMiniPlayer';
+import ReaderErrorBoundary from './components/ReaderErrorBoundary';
 import { ErrorScreenV2 } from '@components';
 import { ChapterScreenProps } from '@navigators/types';
 import { getString } from '@i18n/translations';
@@ -305,16 +307,19 @@ export const ChapterContent = ({
       {loading ? (
         <ChapterLoadingScreen />
       ) : (
-        <WebViewReader
-          onPress={handleReaderPress}
-          onTouchStart={handleReaderTouchStart}
-          onSearchResult={setSearchResult}
-          searchTextRef={searchTextRef}
-        />
+        <ReaderErrorBoundary onRetry={refetch}>
+          <WebViewReader
+            onPress={handleReaderPress}
+            onTouchStart={handleReaderTouchStart}
+            onSearchResult={setSearchResult}
+            searchTextRef={searchTextRef}
+          />
+        </ReaderErrorBoundary>
       )}
       {readerSheetMounted ? (
         <ReaderBottomSheetV2 bottomSheetRef={readerSheetRef} />
       ) : null}
+      <TtsMiniPlayer onPress={() => navigation.navigate('Player')} />
       {!hidden ? (
         <>
           <ReaderAppbar
@@ -338,6 +343,7 @@ export const ChapterContent = ({
               openReaderSheet={openReaderSheet}
               scrollToStart={scrollToStart}
               openDrawer={openDrawerI}
+              openPlayer={() => navigation.navigate('Player')}
             />
           ) : null}
         </>

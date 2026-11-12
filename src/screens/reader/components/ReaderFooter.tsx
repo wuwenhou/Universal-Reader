@@ -15,6 +15,7 @@ interface ChapterFooterProps {
   openReaderSheet: () => void;
   scrollToStart: () => void;
   openDrawer: () => void;
+  openPlayer: () => void;
 }
 
 const fastOutSlowIn = Easing.bezier(0.4, 0.0, 0.2, 1.0);
@@ -65,6 +66,7 @@ const ChapterFooter = ({
   openReaderSheet,
   scrollToStart,
   openDrawer,
+  openPlayer,
 }: ChapterFooterProps) => {
   const { nextChapter, prevChapter, navigateChapter } = useChapterContext();
   const theme = useTheme();
@@ -145,6 +147,13 @@ const ChapterFooter = ({
             size={26}
             iconColor={theme.onSurface}
           />
+        </Pressable>
+        <Pressable
+          android_ripple={rippleConfig}
+          style={styles.buttonStyles}
+          onPress={openPlayer}
+        >
+          <IconButton icon="headphones" size={26} iconColor={theme.onSurface} />
         </Pressable>
         <Pressable
           android_ripple={rippleConfig}

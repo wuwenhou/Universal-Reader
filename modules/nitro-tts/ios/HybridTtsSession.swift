@@ -55,6 +55,12 @@ final class HybridTtsSession: HybridTtsSessionSpec {
     }
   }
 
+  func setSleepTimer(minutes: Double) throws -> Promise<Void> {
+    return MainQueuePromise.run {
+      self.coordinator.setSleepTimer(minutes: Int(minutes))
+    }
+  }
+
   func addOnStateChangedListener(
     listener: @escaping (TtsPlaybackState) -> Void
   ) throws -> ListenerSubscription {

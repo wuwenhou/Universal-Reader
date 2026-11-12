@@ -1,0 +1,32 @@
+/**
+ * Release signing for the Android build.
+ *
+ * The keystore is never part of the repository: the path and the credentials
+ * are read from the environment, so a release can be produced from CI
+ * without a secret ever being committed.
+ *
+ * When the environment does not provide a keystore the release build falls
+ * back to the debug key, which keeps local builds working.
+ */
+def releaseStoreFile = System.getenv("UNIVERSAL_READER_STORE_FILE")
+
+android {
+    signingConfigs {
+        if (releaseStoreFile) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword System.getenv("UNIVERSAL_READER_STORE_PASSWORD")
+                keyAlias System.getenv("UNIVERSAL_READER_KEY_ALIAS")
+                keyPassword System.getenv("UNIVERSAL_READER_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig releaseStoreFile
+                ? signingConfigs.release
+                : signingConfigs.debug
+        }
+    }
+}

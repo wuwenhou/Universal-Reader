@@ -30,7 +30,7 @@ export interface AppRelease {
 }
 
 const LATEST_RELEASE_URL =
-  'https://api.github.com/repos/LNReader/lnreader/releases/latest';
+  'https://api.github.com/repos/wuwenhou/universal-reader/releases/latest';
 const LAST_UPDATE_CHECK_KEY = 'LAST_UPDATE_CHECK';
 const IGNORED_UPDATE_VERSION_KEY = 'IGNORED_UPDATE_VERSION';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;

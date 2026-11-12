@@ -30,10 +30,7 @@ env:
 jobs:
   release-android:
     name: Build Draft Release
-    if: >-
-      github.ref == 'refs/heads/master' &&
-      github.actor_id == vars.RELEASE_ACTOR_ID &&
-      github.triggering_actor == vars.RELEASE_ACTOR_LOGIN
+    if: github.ref == 'refs/heads/main'
     environment: release
     runs-on: ubuntu-24.04
     timeout-minutes: 90
@@ -51,7 +48,7 @@ jobs:
       - name: Set Up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
@@ -80,7 +77,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Version must use stable semver, for example 2.0.4"
+            echo "Version must use stable semver, for example 0.3.0"
             exit 1
           fi
 
@@ -121,13 +118,13 @@ jobs:
             git commit -m "chore: Release v$RELEASE_VERSION"
           fi
 
-          git fetch origin master
+          git fetch origin main
           REMOTE_VERSION="$(
             node -e "
               const { execFileSync } = require('child_process');
               const contents = execFileSync(
                 'git',
-                ['show', 'origin/master:package.json'],
+                ['show', 'origin/main:package.json'],
                 { encoding: 'utf8' },
               );
               process.stdout.write(JSON.parse(contents).version);
@@ -135,8 +132,8 @@ jobs:
           )"
 
           if [ "$REMOTE_VERSION" = "$RELEASE_VERSION" ]; then
-            echo "Release commit is already on master; resuming from it"
-            git checkout --detach origin/master
+            echo "Release commit is already on main; resuming from it"
+            git checkout --detach origin/main
             echo "RELEASE_ALREADY_PUSHED=true" >> "$GITHUB_ENV"
           else
             echo "RELEASE_ALREADY_PUSHED=false" >> "$GITHUB_ENV"
@@ -162,6 +159,29 @@ jobs:
             --clean \
             --no-install
 
+      - name: Restore Release Keystore
+        env:
+          UNIVERSAL_READER_KEYSTORE_BASE64: ${{ secrets.UNIVERSAL_READER_KEYSTORE_BASE64 }}
+          UNIVERSAL_READER_STORE_PASSWORD: ${{ secrets.UNIVERSAL_READER_STORE_PASSWORD }}
+          UNIVERSAL_READER_KEY_ALIAS: ${{ secrets.UNIVERSAL_READER_KEY_ALIAS }}
+          UNIVERSAL_READER_KEY_PASSWORD: ${{ secrets.UNIVERSAL_READER_KEY_PASSWORD }}
+        run: |
+          if [ -z "$UNIVERSAL_READER_KEYSTORE_BASE64" ]; then
+            echo "UNIVERSAL_READER_KEYSTORE_BASE64 is not configured"
+            exit 1
+          fi
+
+          mkdir -p "$RUNNER_TEMP/keystore"
+          echo "$UNIVERSAL_READER_KEYSTORE_BASE64" | base64 --decode \
+            > "$RUNNER_TEMP/keystore/release.jks"
+
+          {
+            echo "UNIVERSAL_READER_STORE_FILE=$RUNNER_TEMP/keystore/release.jks"
+            echo "UNIVERSAL_READER_STORE_PASSWORD=$UNIVERSAL_READER_STORE_PASSWORD"
+            echo "UNIVERSAL_READER_KEY_ALIAS=$UNIVERSAL_READER_KEY_ALIAS"
+            echo "UNIVERSAL_READER_KEY_PASSWORD=$UNIVERSAL_READER_KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
       - name: Configure Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -186,7 +206,7 @@ jobs:
       - name: Upload Sourcemaps
         run: |
           cp android/app/build/generated/sourcemaps/react/release/index.android.bundle.map \
-            "release-artifacts/LNReader-v${RELEASE_VERSION}-sourcemap.map"
+            "release-artifacts/UniversalReader-v${RELEASE_VERSION}-sourcemap.map"
 
       - name: Verify APK Signatures
         run: |
@@ -200,13 +220,13 @@ jobs:
           fi
 
           for APK in release-artifacts/*.apk; do
-            "$APKSIGNER" verify "$APK"
+            "$APKSIGNER" verify --verbose "$APK"
           done
 
       - name: Upload Release APKs
         uses: actions/upload-artifact@v4
         with:
-          name: LNReader-v${{ steps.version.outputs.version }}
+          name: UniversalReader-v${{ steps.version.outputs.version }}
           path: release-artifacts/
           if-no-files-found: error
           retention-days: 30
@@ -215,9 +235,9 @@ jobs:
       - name: Push Release Commit
         run: |
           if [ "$RELEASE_ALREADY_PUSHED" = "true" ]; then
-            echo "Release commit is already on master"
+            echo "Release commit is already on main"
           else
-            git push origin HEAD:master
+            git push origin HEAD:main
           fi
 
       - name: Create Draft GitHub Release
@@ -227,6 +247,6 @@ jobs:
           gh release create "v$RELEASE_VERSION" \
             release-artifacts/* \
             --target "$RELEASE_SHA" \
-            --title "LNReader v$RELEASE_VERSION" \
+            --title "Universal Reader v$RELEASE_VERSION" \
             --generate-notes \
             --draft
