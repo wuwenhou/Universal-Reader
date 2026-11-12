@@ -67,12 +67,7 @@ class AdblockService {
 
     this.enabledLists = settings.enabledLists;
 
-    if (listsChanged) {
-      this.buildPromise = adblockEngine
-        .configure(settings.enabledLists)
-        .then(() => undefined)
-        .catch(() => undefined);
-    } else if (!this.buildPromise) {
+    if (listsChanged || !this.buildPromise) {
       this.buildPromise = adblockEngine
         .configure(settings.enabledLists)
         .then(() => undefined)

@@ -97,6 +97,7 @@ class AdblockEngine {
 
     await this.ensureReady();
   }
+
   /** Builds the engine if it does not exist yet. */
   async ensureReady(): Promise<FiltersEngine> {
     if (this.engine) {
@@ -104,20 +105,26 @@ class AdblockEngine {
     }
 
     if (!this.building) {
-      const lists = this.enabledLists.length
-        ? this.enabledLists
-        : (['abpvn', 'easylist'] as AdblockFilterListId[]);
-
-      this.building = Promise.resolve().then(() => {
+      const lists = this.enabledLists;
+      const build: Promise<FiltersEngine> = Promise.resolve().then(() => {
         const filters = buildFilterText(lists);
         const engine = FiltersEngine.parse(filters, {
           enableCompression: true,
           enableHtmlFiltering: true,
           loadCosmeticFilters: true,
         });
-        this.engine = engine;
+
+        // A rebuild may have been started while this one was running. The
+        // newer engine wins, so the older one is dropped instead of
+        // overwriting it.
+        if (this.building === build) {
+          this.engine = engine;
+        }
+
         return engine;
       });
+
+      this.building = build;
     }
 
     return this.building;

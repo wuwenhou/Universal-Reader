@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAdblockSettings } from '@hooks/persisted/useAdblockSettings';
 import { adblockService } from '@services/adblock/adblockService';
+import { AdblockFilterListId } from '@services/adblock/types';
 
 export interface UseAdblockResult {
   /** Whether ad blocking is switched on. */
@@ -23,10 +24,21 @@ export const useAdblock = (): UseAdblockResult => {
   const [ready, setReady] = useState(adblockService.isReady);
   const [blockedCount, setBlockedCount] = useState(0);
 
+  // The persisted settings are read into new arrays on every render, so the
+  // effect keys off their content instead of their identity.
+  const listsKey = enabledLists.join(',');
+  const exceptionsKey = exceptions.join(',');
+
   useEffect(() => {
     let cancelled = false;
 
-    adblockService.applySettings({ enabled, enabledLists, exceptions });
+    adblockService.applySettings({
+      enabled,
+      enabledLists: listsKey
+        ? (listsKey.split(',') as AdblockFilterListId[])
+        : [],
+      exceptions: exceptionsKey ? exceptionsKey.split(',') : [],
+    });
 
     if (!enabled) {
       setReady(false);
@@ -42,7 +54,7 @@ export const useAdblock = (): UseAdblockResult => {
     return () => {
       cancelled = true;
     };
-  }, [enabled, enabledLists, exceptions]);
+  }, [enabled, exceptionsKey, listsKey]);
 
   const getCosmeticCss = useCallback(
     (pageUrl: string) => adblockService.getCosmeticCss(pageUrl),

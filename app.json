@@ -56,7 +56,7 @@
       ]
     ],
     "android": {
-      "versionCode": 3,
+      "versionCode": 6144,
       "package": "com.wuwenhou.universalreader",
       "adaptiveIcon": {
         "foregroundImage": "./assets/native/ic_launcher_foreground.png",
