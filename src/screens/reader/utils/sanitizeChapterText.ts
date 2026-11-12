@@ -5,7 +5,7 @@ const PLUGIN_ISSUE_REPORT_URL =
   'https://github.com/lnreader/lnreader-plugins/issues/new';
 
 /** Custom scheme intercepted by the reader WebView to re-fetch the chapter. */
-export const CHAPTER_REFRESH_URL = 'lnreader://refresh-chapter';
+export const CHAPTER_REFRESH_URL = 'universalreader://refresh-chapter';
 
 export const isPluginIssueReportUrl = (url: string): boolean =>
   url === PLUGIN_ISSUE_REPORT_URL ||

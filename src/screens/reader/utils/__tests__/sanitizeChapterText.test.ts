@@ -100,7 +100,9 @@ describe('isPluginIssueReportUrl', () => {
 describe('isChapterRefreshUrl', () => {
   it('matches the refresh-chapter custom scheme', () => {
     expect(isChapterRefreshUrl(CHAPTER_REFRESH_URL)).toBe(true);
-    expect(isChapterRefreshUrl('lnreader://refresh-chapter?x=1')).toBe(false);
+    expect(isChapterRefreshUrl('universalreader://refresh-chapter?x=1')).toBe(
+      false,
+    );
     expect(isChapterRefreshUrl('https://example.com')).toBe(false);
   });
 });

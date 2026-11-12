@@ -2,13 +2,6 @@ import { isUrlAllowed } from '@services/network';
 
 import { adblockService } from './adblockService';
 
-export class BlockedRequestError extends Error {
-  constructor(url: string) {
-    super(`Blocked by ad blocker: ${url}`);
-    this.name = 'BlockedRequestError';
-  }
-}
-
 type FetchLike = typeof fetch;
 
 const isUrl = (input: RequestInfo | URL): input is string =>
@@ -46,6 +39,25 @@ const guessType = (
   return 'other';
 };
 
+/**
+ * The development server and the emulator host the app talks to.
+ *
+ * They are only reachable from the device itself, so the plain HTTP rule does
+ * not apply to them.
+ */
+const isDevelopmentHost = (url: string): boolean => {
+  try {
+    const { hostname } = new URL(url);
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '10.0.2.2'
+    );
+  } catch {
+    return false;
+  }
+};
+
 let installed = false;
 
 /**
@@ -69,8 +81,8 @@ export const installAdblockFetchInterceptor = (): void => {
   ): Promise<Response> => {
     const url = toUrl(input);
 
-    // Plain HTTP is only used when the source was explicitly allowed.
-    if (!isUrlAllowed(url)) {
+    if (!isDevelopmentHost(url) && !isUrlAllowed(url)) {
+      // Plain HTTP is only used when the source was explicitly allowed.
       return new Response('', { status: 403, statusText: 'Blocked' });
     }
 
