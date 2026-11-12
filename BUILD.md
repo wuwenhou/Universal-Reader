@@ -9,8 +9,32 @@ is built from the [LNReader](https://github.com/LNReader/lnreader) codebase.
 - pnpm 11.20.0 (`corepack enable pnpm`)
 - JDK 17 or newer
 - Android SDK with build tools 36 and NDK 28.2.13676358
-- CMake 3.22.1
+- CMake 3.22.1 or newer (3.31.6 is recommended, see below)
 - Rust 1.98 and `cargo-ndk` 4.1.2 (only needed for the native modules)
+
+### CMake
+
+The CMake version that ships with the Android SDK (3.22.1) re-runs the
+configure step forever on Windows: the glob check it writes for
+`CONFIGURE_DEPENDS` never settles and the build stops with
+
+```
+ninja: error: manifest 'build.ninja' still dirty after 100 tries
+```
+
+The project pins the version through the `cmakeVersion` property in
+`android/gradle.properties`, which the config plugin writes into every
+native module. Set it to a CMake version that is installed in the SDK:
+
+```properties
+cmakeVersion=3.31.6
+```
+
+Install it with the SDK manager:
+
+```bash
+sdkmanager "cmake;3.31.6"
+```
 
 ## Setup
 

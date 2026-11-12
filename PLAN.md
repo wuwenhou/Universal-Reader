@@ -14,7 +14,7 @@ survives broken chapters.
 | Ad blocking settings (lists, per site exceptions)                              | done  |
 | HTTPS enforcement with per source exception                                    | done  |
 | Full screen listening player (sentence queue, seek, speed, voice, sleep timer) | done  |
-| Mini player in the reader                                                      | done  |
+| Mini player in the reader and the bottom navigation                            | done  |
 | Native sleep timer in `TtsPlaybackStore`                                       | done  |
 | Reader hardening (timeout, size cap, error boundary, WebView crash)            | done  |
 | Release workflow with environment based signing                                | done  |
