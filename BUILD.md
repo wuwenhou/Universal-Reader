@@ -23,7 +23,7 @@ ninja: error: manifest 'build.ninja' still dirty after 100 tries
 ```
 
 The project pins the version through the `cmakeVersion` property in
-`android/gradle.properties`, which the config plugin writes into every
+`android/gradle.properties`, which the config plugin applies to every
 native module. Set it to a CMake version that is installed in the SDK:
 
 ```properties
