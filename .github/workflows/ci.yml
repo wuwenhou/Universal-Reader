@@ -43,7 +43,9 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - uses: android-actions/setup-android@v3
+      # v4 installs cmdline-tools + platform-tools only. The legacy `tools`
+      # package that v3 installed by default was removed from the SDK repo.
+      - uses: android-actions/setup-android@v4
 
       - name: Install SDK components
         run: |
