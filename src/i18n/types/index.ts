@@ -566,6 +566,7 @@ export interface StringMap {
   'playerScreen.sleepTimerRunning': 'string';
   'playerScreen.voice': 'string';
   'playerScreen.toc': 'string';
+  'playerScreen.bookmarkToggled': 'string';
   'readerScreen.bottomSheet.alignCenter': 'string';
   'readerScreen.bottomSheet.alignJustify': 'string';
   'readerScreen.bottomSheet.alignLeft': 'string';

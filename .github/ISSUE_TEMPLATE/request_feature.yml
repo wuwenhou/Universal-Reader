@@ -1,14 +1,14 @@
 # Cloned from tachiyomi
 
 name: Feature request
-description: Suggest a feature to improve LNReader
+description: Suggest a feature to improve Universal Reader
 labels: [feature]
 body:
   - type: textarea
     id: feature-description
     attributes:
       label: Describe your suggested feature
-      description: How can LNReader be improved?
+      description: How can Universal Reader be improved?
       placeholder: |
         Example:
           "It should work like this..."
@@ -34,7 +34,7 @@ body:
           required: true
         - label: If this is an issue with a source, I should be opening an issue in the [sources repository](https://github.com/lnreader/lnreader-sources/issues/new/choose).
           required: true
-        - label: I have updated the app to version **[2.1.4](https://github.com/lnreader/lnreader/releases/latest)**.
+        - label: I have updated the app to version **[0.3.0](https://github.com/wuwenhou/Universal-Reader/releases/latest)**.
           required: true
         - label: I will fill out all of the requested information in this form.
           required: true

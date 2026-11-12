@@ -1,12 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconButtonV2, Slider } from '@components';
+import { bookmarkChapter } from '@database/queries/ChapterQueries';
 import { getString } from '@i18n/translations';
 import { useTheme } from '@hooks/persisted';
 import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
+import { showToast } from '@utils/showToast';
 import { TtsSpeedSheet } from './components/TtsSpeedSheet';
 import { TtsSleepTimerSheet } from './components/TtsSleepTimerSheet';
 import { TtsVoiceSheet } from './components/TtsVoiceSheet';
@@ -53,21 +62,29 @@ const PlayerScreen = ({ navigation }: PlayerScreenProps) => {
   const total = progress.total || sentences.length || 0;
   const position = Math.min(progress.index + 1, total);
 
-  // A rough estimate of the remaining time, based on the average length of
-  // the spoken sentences and the current speed.
-  const estimatedRemaining = useMemo(() => {
-    if (!total || !sentences.length) {
+  // A rough estimate of how long the queue takes, based on the average
+  // length of the spoken sentences. The native engine does not report a
+  // duration, so this is only used for the labels.
+  const estimatedTotal = useMemo(() => {
+    if (!sentences.length) {
       return 0;
     }
 
     const averageLength =
-      sentences.reduce((total, sentence) => total + sentence.length, 0) /
+      sentences.reduce((sum, sentence) => sum + sentence.length, 0) /
       sentences.length;
-    const remainingSentences = Math.max(total - progress.index, 0);
 
     // ~14 characters per second at 1x speed.
-    return Math.round((averageLength * remainingSentences) / 14);
-  }, [progress.index, sentences, total]);
+    return Math.round((averageLength * sentences.length) / 14);
+  }, [sentences]);
+
+  const estimatedElapsed = useMemo(() => {
+    if (!estimatedTotal || !total) {
+      return 0;
+    }
+
+    return Math.round((estimatedTotal * progress.index) / total);
+  }, [estimatedTotal, progress.index, total]);
 
   const onSeek = useCallback(
     (value: number) => {
@@ -77,8 +94,27 @@ const PlayerScreen = ({ navigation }: PlayerScreenProps) => {
   );
 
   const openToc = useCallback(() => {
-    navigation.navigate('ReaderToc');
+    navigation.navigate('PlayerToc');
   }, [navigation]);
+
+  const shareChapter = useCallback(() => {
+    const title = metadata?.chapterName ?? '';
+    const novel = metadata?.novelName ?? '';
+
+    void Share.share({ message: novel ? `${novel} - ${title}` : title });
+  }, [metadata?.chapterName, metadata?.novelName]);
+
+  const toggleBookmark = useCallback(() => {
+    if (!metadata?.chapterId) {
+      return;
+    }
+
+    void bookmarkChapter(metadata.chapterId)
+      .then(() => showToast(getString('playerScreen.bookmarkToggled')))
+      .catch(cause =>
+        showToast(cause instanceof Error ? cause.message : String(cause)),
+      );
+  }, [metadata]);
 
   useEffect(() => {
     if (state === 'completed') {
@@ -170,7 +206,7 @@ const PlayerScreen = ({ navigation }: PlayerScreenProps) => {
           />
           <View style={styles.timeRow}>
             <Text style={[styles.time, { color: theme.onSurfaceVariant }]}>
-              {formatTime(estimatedRemaining * (position / Math.max(total, 1)))}
+              {formatTime(estimatedElapsed)}
             </Text>
             <Text style={[styles.time, { color: theme.onSurfaceVariant }]}>
               {`${position}/${total}`}
@@ -243,6 +279,19 @@ const PlayerScreen = ({ navigation }: PlayerScreenProps) => {
             </Text>
           </Pressable>
         </View>
+
+        <View style={styles.secondaryActions}>
+          <IconButtonV2
+            name="share-variant"
+            onPress={shareChapter}
+            theme={theme}
+          />
+          <IconButtonV2
+            name="bookmark-outline"
+            onPress={toggleBookmark}
+            theme={theme}
+          />
+        </View>
       </ScrollView>
 
       <TtsSpeedSheet
@@ -311,6 +360,11 @@ const styles = StyleSheet.create({
   },
   playIcon: { fontSize: 26 },
   actions: {
+    flexDirection: 'row',
+    gap: 24,
+    justifyContent: 'center',
+  },
+  secondaryActions: {
     flexDirection: 'row',
     gap: 24,
     justifyContent: 'center',

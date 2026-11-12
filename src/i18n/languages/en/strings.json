@@ -668,7 +668,8 @@
     "sleepTimer": "Sleep timer",
     "sleepTimerRunning": "Sleep timer: %{count} min left",
     "voice": "Voice",
-    "toc": "Chapters"
+    "toc": "Chapters",
+    "bookmarkToggled": "Bookmark updated"
   },
   "readerScreen": {
     "bottomSheet": {

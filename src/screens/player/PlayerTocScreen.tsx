@@ -4,8 +4,9 @@ import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyView, IconButtonV2, LoadingScreenV2 } from '@components';
-import { ChapterInfo } from '@database/types';
+import { ChapterInfo, NovelInfo } from '@database/types';
 import { getNovelChapters } from '@database/queries/ChapterQueries';
+import { getNovelById } from '@database/queries/NovelQueries';
 import { useTheme } from '@hooks/persisted';
 import { getString } from '@i18n/translations';
 import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
@@ -28,6 +29,7 @@ const PlayerTocScreen = ({ navigation }: PlayerTocScreenProps) => {
   const insets = useSafeAreaInsets();
   const { metadata } = useTtsPlayer();
   const [chapters, setChapters] = useState<ChapterInfo[] | undefined>();
+  const [novel, setNovel] = useState<NovelInfo | undefined>();
   const [error, setError] = useState<string | undefined>();
 
   const novelId = metadata?.novelId;
@@ -39,6 +41,13 @@ const PlayerTocScreen = ({ navigation }: PlayerTocScreenProps) => {
     }
 
     let active = true;
+
+    // The novel is needed to open a chapter: the reader bootstraps it from
+    // the path and the plugin, not from the id alone.
+    const storedNovel = getNovelById(novelId);
+    if (storedNovel) {
+      setNovel(storedNovel);
+    }
 
     getNovelChapters(novelId)
       .then(result => {
@@ -71,22 +80,14 @@ const PlayerTocScreen = ({ navigation }: PlayerTocScreenProps) => {
         <Pressable
           key={chapter.id}
           onPress={() => {
-            if (isCurrent) {
+            if (isCurrent || !novel) {
               navigation.goBack();
               return;
             }
 
             navigation.navigate('ReaderStack', {
               screen: 'Chapter',
-              params: {
-                novel: {
-                  id: novelId,
-                  name: metadata?.novelName,
-                  pluginId: metadata?.pluginId,
-                  cover: metadata?.coverUri ?? null,
-                },
-                chapter,
-              },
+              params: { novel, chapter },
             });
           }}
           style={[
@@ -107,15 +108,7 @@ const PlayerTocScreen = ({ navigation }: PlayerTocScreenProps) => {
         </Pressable>
       );
     },
-    [
-      metadata?.chapterId,
-      metadata?.coverUri,
-      metadata?.novelName,
-      metadata?.pluginId,
-      navigation,
-      novelId,
-      theme,
-    ],
+    [metadata?.chapterId, navigation, novel, theme],
   );
 
   if (!novelId) {

@@ -59,7 +59,7 @@ for (const element of metadata.elements || []) {
   }
 
   const sourcePath = path.join(apkOutputDir, element.outputFile);
-  const artifactName = `LNReader-v${version}-${outputName}.apk`;
+  const artifactName = `UniversalReader-v${version}-${outputName}.apk`;
   const artifactPath = path.join(artifactDir, artifactName);
 
   fs.copyFileSync(sourcePath, artifactPath);
@@ -91,7 +91,7 @@ fs.writeFileSync(
 
 console.table(
   [...packagedOutputs].sort().map(outputName => {
-    const artifactName = `LNReader-v${version}-${outputName}.apk`;
+    const artifactName = `UniversalReader-v${version}-${outputName}.apk`;
     const stats = fs.statSync(path.join(artifactDir, artifactName));
 
     return {
