@@ -30,6 +30,8 @@ trả phí hoặc yêu cầu đăng nhập.
 - [x] APK debug build thành công, chứa cả hai ABI; symbol JNI và căn chỉnh 16 KB đã kiểm tra.
 - [x] `:app:lintDebug`: pass (chỉ còn warning).
 - [x] Script build chuẩn: `tools/env.ps1`, `build-native.ps1`, `build-all.ps1`, `verify-apk.ps1`.
+- [x] Git repo `main`, push GitHub `wuwenhou/Universal-Reader`, tag `v0.1.0` + release APK.
+- [x] CI xanh lần đầu: job `rust` (fmt/clippy/test) và `android` (native + APK + lint + verify).
 
 ### Chưa hoàn thành
 
@@ -37,7 +39,6 @@ trả phí hoặc yêu cầu đăng nhập.
 - [ ] Chưa có thiết bị adb; emulator chưa có hypervisor.
 - [x] Đã tải AEHD 2.2.0 (`sdkmanager extras;google;Android_Emulator_Hypervisor_Driver`), **chưa cài** vì cần quyền admin.
 - [ ] System image `system-images;android-35;google_apis;x86_64` chỉ còn thư mục `.installer` (chưa cài đủ) → chưa tạo được AVD.
-- [ ] Chưa init git repository và CI thực tế chạy lần đầu.
 
 ## 3. Quyết định kiến trúc
 

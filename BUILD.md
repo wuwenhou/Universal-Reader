@@ -193,7 +193,11 @@ Workflow mẫu: `.github/workflows/ci.yml`.
 
 - Job `rust`: fmt, clippy, test trên Ubuntu.
 - Job `android`: JDK 21, Android SDK 35, NDK 28.2, Rust targets, cargo-ndk,
-  build native, `assembleDebug`, `lintDebug`.
+  build native, `assembleDebug`, `lintDebug`, verify APK.
+- Dùng `android-actions/setup-android@v4`: v3 cài package `tools` mặc định,
+  nhưng package này đã bị xóa khỏi SDK repository (lỗi `Failed to find package 'tools'`).
+- `android/gradlew` phải có mode `100755` trong git; nếu không runner báo
+  `Permission denied` (exit 126). Kiểm tra: `git ls-files -s android/gradlew`.
 - CI không build release nếu thiếu secret ký.
 - Cache: Gradle và Cargo để giữ thời gian build dưới ~10 phút.
 
@@ -208,6 +212,8 @@ Workflow mẫu: `.github/workflows/ci.yml`.
 | `Unable to strip libreader_core.so` | Thiếu `ndkVersion` | Đã set `ndkVersion = "28.2.13676358"` |
 | `JAVA_HOME is not set` | Chưa source `env.ps1` | `. .\tools\env.ps1` |
 | Script `.ps1` bị chặn | Execution policy | Dùng `.cmd` wrapper hoặc `-ExecutionPolicy Bypass` |
+| CI: `./gradlew: Permission denied` (126) | `gradlew` mất exec bit khi commit từ Windows | `git update-index --chmod=+x android/gradlew` rồi commit |
+| CI: `Failed to find package 'tools'` | `setup-android@v3` cài package `tools` đã bị xóa | Dùng `setup-android@v4` |
 | Emulator không boot / quá chậm | Không có hypervisor | Dùng máy thật; hoặc bật WHPX/AEHD (admin + reboot) |
 | `core v-1` trên app | `.so` thiếu hoặc sai ABI | Chạy `build-native.ps1`, kiểm tra `jniLibs` |
 
