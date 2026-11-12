@@ -72,14 +72,19 @@ const hostnameOf = (url: string): string => {
 class AdblockEngine {
   private engine: FiltersEngine | null = null;
 
-  private building: Promise<FiltersEngine> | null = null;
+  private building: Promise<FiltersEngine | null> | null = null;
 
   private enabledLists: AdblockFilterListId[] = [];
 
+  private failed = false;
+
   /**
-   * Builds the engine for the given lists. Returns the previous engine when
-   * the list selection did not change, so a settings toggle does not rebuild
-   * an identical engine.
+   * Builds the engine for the given lists.
+   *
+   * The engine is only rebuilt when the selection really changed, and a build
+   * that is already running is never restarted: parsing the lists needs a few
+   * hundred megabytes, so a second parse would be enough to get the app
+   * killed by the system.
    */
   async configure(lists: AdblockFilterListId[]): Promise<void> {
     const wanted = ADBLOCK_LIST_ORDER.filter(id => lists.includes(id));
@@ -87,47 +92,67 @@ class AdblockEngine {
       wanted.length === this.enabledLists.length &&
       wanted.every((id, index) => this.enabledLists[index] === id);
 
-    if (unchanged && this.engine) {
+    if (unchanged) {
+      // A build for the same lists is either done or still running.
+      await this.ensureReady();
       return;
     }
 
     this.enabledLists = wanted;
     this.engine = null;
     this.building = null;
+    this.failed = false;
 
     await this.ensureReady();
   }
 
-  /** Builds the engine if it does not exist yet. */
-  async ensureReady(): Promise<FiltersEngine> {
+  /**
+   * Builds the engine if it does not exist yet.
+   *
+   * The build is guarded: when the device cannot hold the engine the failure
+   * is reported instead of taking the app down with it.
+   */
+  async ensureReady(): Promise<FiltersEngine | null> {
     if (this.engine) {
       return this.engine;
     }
 
     if (!this.building) {
       const lists = this.enabledLists;
-      const build: Promise<FiltersEngine> = Promise.resolve().then(() => {
-        const filters = buildFilterText(lists);
-        const engine = FiltersEngine.parse(filters, {
-          enableCompression: true,
-          enableHtmlFiltering: true,
-          loadCosmeticFilters: true,
-        });
+      const build: Promise<FiltersEngine | null> = Promise.resolve().then(
+        () => {
+          try {
+            const filters = buildFilterText(lists);
+            const engine = FiltersEngine.parse(filters, {
+              enableCompression: true,
+              enableHtmlFiltering: true,
+              loadCosmeticFilters: true,
+            });
 
-        // A rebuild may have been started while this one was running. The
-        // newer engine wins, so the older one is dropped instead of
-        // overwriting it.
-        if (this.building === build) {
-          this.engine = engine;
-        }
+            // A rebuild may have been started while this one was running. The
+            // newer engine wins, so the older one is dropped instead of
+            // overwriting it.
+            if (this.building === build) {
+              this.engine = engine;
+            }
 
-        return engine;
-      });
+            return engine;
+          } catch {
+            this.failed = true;
+            return null;
+          }
+        },
+      );
 
       this.building = build;
     }
 
     return this.building;
+  }
+
+  /** True when the engine could not be built on this device. */
+  get hasFailed(): boolean {
+    return this.failed;
   }
 
   get isReady(): boolean {

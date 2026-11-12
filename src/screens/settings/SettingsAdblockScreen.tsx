@@ -112,6 +112,11 @@ const AdblockSettings = ({ navigation }: AdblockSettingsProps) => {
               theme={theme}
             />
           ))}
+          <List.Item
+            title={getString('adblockSettingsScreen.memoryNote')}
+            description={getString('adblockSettingsScreen.memoryNoteDesc')}
+            theme={theme}
+          />
         </List.Section>
 
         <List.Section>

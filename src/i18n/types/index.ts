@@ -16,6 +16,8 @@ export interface StringMap {
   'adblockSettingsScreen.enableDesc': 'string';
   'adblockSettingsScreen.blockedRequests': 'string';
   'adblockSettingsScreen.filterLists': 'string';
+  'adblockSettingsScreen.memoryNote': 'string';
+  'adblockSettingsScreen.memoryNoteDesc': 'string';
   'adblockSettingsScreen.exceptions': 'string';
   'adblockSettingsScreen.noExceptions': 'string';
   'adblockSettingsScreen.addException': 'string';

@@ -17,7 +17,10 @@ export interface AdblockSettings {
 
 export const initialAdblockSettings: AdblockSettings = {
   enabled: true,
-  enabledLists: ['abpvn', 'easylist'],
+  // Only the small list is enabled by default: the bigger lists need a few
+  // hundred megabytes to parse, which is more than a low end device can
+  // spare while it is running.
+  enabledLists: ['abpvn'],
   exceptions: [],
   blockedCount: 0,
 };

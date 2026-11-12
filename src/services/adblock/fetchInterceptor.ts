@@ -81,13 +81,21 @@ export const installAdblockFetchInterceptor = (): void => {
   ): Promise<Response> => {
     const url = toUrl(input);
 
+    // Without a Response implementation there is no way to answer a blocked
+    // request, so the request is let through instead of failing.
+    if (typeof Response === 'undefined') {
+      return originalFetch(input, init);
+    }
+
     if (!isDevelopmentHost(url) && !isUrlAllowed(url)) {
       // Plain HTTP is only used when the source was explicitly allowed.
-      return new Response('', { status: 403, statusText: 'Blocked' });
+      return new Response(null, { status: 403, statusText: 'Blocked' });
     }
 
     if (adblockService.isBlocked(url, { type: guessType(url) })) {
-      return new Response('', { status: 204, statusText: 'Blocked' });
+      // A 204 must not carry a body, and the caller only needs to know that
+      // the request did not happen.
+      return new Response(null, { status: 204, statusText: 'Blocked' });
     }
 
     return originalFetch(input, init);

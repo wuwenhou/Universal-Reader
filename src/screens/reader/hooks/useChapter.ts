@@ -40,6 +40,7 @@ import { adblockService } from '@services/adblock/adblockService';
 import {
   ChapterTooLargeError,
   MAX_CHAPTER_HTML_LENGTH,
+  settleWithin,
   withTimeout,
 } from '../utils/limits';
 import { getErrorMessage } from '@utils/error';
@@ -224,9 +225,9 @@ export default function useChapter(
           }
 
           // The ad blocker needs its engine before it can strip resources
-          // from the chapter. The wait is bounded, so a slow engine never
-          // keeps the chapter from opening.
-          await adblockService.ensureReady();
+          // from the chapter. The wait is bounded, so a slow or heavy filter
+          // list never keeps the chapter from opening.
+          await settleWithin(adblockService.ensureReady(), 1500);
           return adblockService.filterChapter(sanitized, siteUrl).html;
         }),
       );

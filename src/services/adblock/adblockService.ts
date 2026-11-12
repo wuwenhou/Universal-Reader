@@ -38,7 +38,7 @@ class AdblockService {
 
   private enabled = true;
 
-  private enabledLists: AdblockFilterListId[] = ['abpvn', 'easylist'];
+  private enabledLists: AdblockFilterListId[] = ['abpvn'];
 
   /**
    * Applies the persisted settings.
@@ -81,6 +81,11 @@ class AdblockService {
       return;
     }
     await this.buildPromise;
+  }
+
+  /** True when the engine could not be built on this device. */
+  get hasFailed(): boolean {
+    return adblockEngine.hasFailed;
   }
 
   get isEnabled(): boolean {

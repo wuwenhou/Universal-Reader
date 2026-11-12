@@ -50,11 +50,11 @@ export const ADBLOCK_LIST_ORDER: AdblockFilterListId[] = [
 /**
  * Builds the filter text for the given lists.
  *
- * uBO syntax is line based, so the lists are simply concatenated. Duplicate
- * rules across lists are removed to keep the parsed engine small.
+ * uBO syntax is line based, so the lists are simply concatenated. The
+ * comments and the list headers are dropped, because the engine does not need
+ * them and they make up a good part of the files.
  */
 export const buildFilterText = (listIds: AdblockFilterListId[]): string => {
-  const seen = new Set<string>();
   const rules: string[] = [];
 
   for (const id of listIds) {
@@ -68,10 +68,6 @@ export const buildFilterText = (listIds: AdblockFilterListId[]): string => {
       if (!rule || rule.startsWith('!') || rule.startsWith('[')) {
         continue;
       }
-      if (seen.has(rule)) {
-        continue;
-      }
-      seen.add(rule);
       rules.push(rule);
     }
   }

@@ -54,3 +54,28 @@ export const withTimeout = <T>(
     }
   }) as Promise<T>;
 };
+
+/**
+ * Waits for a promise, but gives up after the given time.
+ *
+ * Unlike {@link withTimeout} it never rejects: it is used for work that is
+ * nice to have but must not keep the screen from working.
+ */
+export const settleWithin = async <T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T | undefined> => {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<undefined>(resolve => {
+    timeout = setTimeout(() => resolve(undefined), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
+};

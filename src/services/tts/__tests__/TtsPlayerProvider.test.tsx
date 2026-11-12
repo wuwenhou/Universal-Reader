@@ -10,6 +10,13 @@ import {
 
 const getNativeSession = async (): Promise<jest.Mocked<TtsSession>> => {
   const createSession = Tts.createSession as jest.Mock;
+
+  // The native session is created on the first command, not when the
+  // provider is mounted.
+  await act(async () => {
+    getPlayer().command('play');
+  });
+
   await waitFor(() => expect(createSession).toHaveBeenCalled());
   return createSession.mock.results[0].value as Promise<
     jest.Mocked<TtsSession>

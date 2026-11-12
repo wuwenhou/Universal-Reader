@@ -15,6 +15,8 @@
     "enableDesc": "Uses uBO-compatible filter lists to remove ads from chapters and block tracking requests. It cannot remove every ad, especially the ones served from the same site as the chapter.",
     "blockedRequests": "Blocked requests",
     "filterLists": "Filter lists",
+    "memoryNote": "About the filter lists",
+    "memoryNoteDesc": "EasyList and EasyPrivacy need a few hundred megabytes of memory to parse, which is more than a low end phone can spare. The app disables the blocking on such a device instead of being closed by the system.",
     "exceptions": "Site exceptions",
     "noExceptions": "No sites are excluded from blocking.",
     "addException": "Add a site",

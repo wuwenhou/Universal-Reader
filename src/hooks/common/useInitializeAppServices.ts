@@ -37,8 +37,13 @@ export const useInitializeAppServices = (
     let isActive = true;
 
     // The interceptor is installed before anything can make a request, so no
-    // ad request can slip through before the engine is ready.
-    installAdblockFetchInterceptor();
+    // ad request can slip through before the engine is ready. A failure here
+    // must not keep the app from starting.
+    try {
+      installAdblockFetchInterceptor();
+    } catch {
+      // The app works without the interceptor, it only loses the blocking.
+    }
 
     initializeAppServices()
       .then(() => {

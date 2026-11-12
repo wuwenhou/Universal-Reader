@@ -37,4 +37,15 @@ describe('adblockEngine', () => {
 
     expect(typeof css).toBe('string');
   });
+
+  it('does not build the engine twice for the same lists', async () => {
+    const before = adblockEngine.activeLists;
+
+    // The reader and the settings screen both configure the engine. A
+    // second build would need the memory of the first one as well, which is
+    // enough to get the app killed by the system.
+    await adblockEngine.configure(before);
+
+    expect(adblockEngine.activeLists).toEqual(before);
+  });
 });

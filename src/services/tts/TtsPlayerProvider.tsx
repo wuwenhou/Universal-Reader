@@ -300,17 +300,15 @@ export const TtsPlayerProvider = ({
   }, [clearSleepTimer, run]);
 
   useEffect(() => {
-    void ensureSession().catch(cause => {
-      if (mountedRef.current) {
-        setError(cause instanceof Error ? cause.message : String(cause));
-      }
-    });
+    // The native session is created when it is first needed, not when the app
+    // starts: creating it binds the system speech engine, which is slow and
+    // fails on a device without one.
     return () => {
       mountedRef.current = false;
       subscriptionsRef.current.forEach(subscription => subscription.remove());
       subscriptionsRef.current = [];
     };
-  }, [ensureSession]);
+  }, []);
 
   useEffect(
     () => () => {

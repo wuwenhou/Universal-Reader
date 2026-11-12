@@ -20,7 +20,6 @@ import Main from './src/navigators/Main';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useInitDatabase } from '@database/db';
 import { useInitializeAppServices } from '@hooks/common/useInitializeAppServices';
-import { useAdblock } from '@hooks/useAdblock';
 import { opSqliteAdapter } from './src/rozenite/opSqliteAdapter';
 import { useRozeniteSqlitePlugin } from '@rozenite/sqlite-plugin';
 import { ThemeProvider, useTheme } from '@hooks/persisted/useTheme';
@@ -71,9 +70,6 @@ const Application = () => {
   const { success: databaseReady, error: databaseError } = useInitDatabase();
   const { ready: servicesReady, error: servicesError } =
     useInitializeAppServices(Boolean(databaseReady));
-  // Builds the ad-blocking engine in the background so the filters are
-  // ready by the time the first chapter is opened.
-  useAdblock();
 
   useEffect(() => {
     if ((databaseReady && servicesReady) || databaseError || servicesError) {
@@ -96,16 +92,14 @@ const Application = () => {
   return (
     <ThemedRootView>
       <KeyboardProvider>
-        <AppErrorBoundary>
-          <SafeAreaProvider>
-            <ThemedPaperProvider>
-              <BottomSheetModalProvider>
-                <StatusBar translucent={true} backgroundColor="transparent" />
-                <Main />
-              </BottomSheetModalProvider>
-            </ThemedPaperProvider>
-          </SafeAreaProvider>
-        </AppErrorBoundary>
+        <SafeAreaProvider>
+          <ThemedPaperProvider>
+            <BottomSheetModalProvider>
+              <StatusBar translucent={true} backgroundColor="transparent" />
+              <Main />
+            </BottomSheetModalProvider>
+          </ThemedPaperProvider>
+        </SafeAreaProvider>
       </KeyboardProvider>
     </ThemedRootView>
   );
@@ -115,7 +109,11 @@ const App = () => (
   <Suspense fallback={null}>
     <ThemeProvider>
       <CrashRecoveryGate>
-        <Application />
+        {/* The boundary wraps the whole application, so a failure while it
+            starts up shows an error instead of closing the app. */}
+        <AppErrorBoundary>
+          <Application />
+        </AppErrorBoundary>
       </CrashRecoveryGate>
     </ThemeProvider>
   </Suspense>
