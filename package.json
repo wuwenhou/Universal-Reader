@@ -1,6 +1,6 @@
 {
   "name": "universal-reader",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "scripts": {
     "dev:android:release": "pnpm run generate:env:release && npx expo run:android --variant release",

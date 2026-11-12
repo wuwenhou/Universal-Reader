@@ -48,6 +48,16 @@ const resolveUrl = (value: string, baseUrl: string): string => {
 };
 
 /**
+ * Chapters above this size are not cleaned up.
+ *
+ * Walking the markup needs a DOM parser, which needs time and memory for a
+ * long chapter - on a low end phone that is enough to make the reader
+ * stutter for seconds. The cosmetic rules still apply and the requests are
+ * still blocked, so only the removed elements are missed.
+ */
+const MAX_FILTERED_HTML_LENGTH = 256 * 1024;
+
+/**
  * Removes blocked resources from a chapter and collects the cosmetic rules
  * that hide ad containers.
  *
@@ -62,6 +72,14 @@ export const filterChapterHtml = (
 ): AdblockHtmlResult => {
   if (!adblockEngine.isReady) {
     return { html, css: '', removed: 0 };
+  }
+
+  if (html.length > MAX_FILTERED_HTML_LENGTH) {
+    return {
+      html,
+      css: adblockEngine.getCosmeticCss(pageUrl),
+      removed: 0,
+    };
   }
 
   let removed = 0;

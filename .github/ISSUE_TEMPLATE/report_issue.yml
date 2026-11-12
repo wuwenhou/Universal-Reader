@@ -45,7 +45,7 @@ body:
       label: Universal Reader version
       description: You can find your Universal Reader version in **More → About**.
       placeholder: |
-        Example: "0.3.0"
+        Example: "0.3.1"
     validations:
       required: true
 
@@ -88,7 +88,7 @@ body:
           required: true
         - label: If this is an issue with a plugin, I should be opening an issue in the [plugins repository](https://github.com/lnreader/lnreader-plugins/issues/new/choose).
           required: true
-        - label: I have updated the app to version **[0.3.0](https://github.com/wuwenhou/Universal-Reader/releases/latest)**.
+        - label: I have updated the app to version **[0.3.1](https://github.com/wuwenhou/Universal-Reader/releases/latest)**.
           required: true
         - label: I will fill out all of the requested information in this form.
           required: true

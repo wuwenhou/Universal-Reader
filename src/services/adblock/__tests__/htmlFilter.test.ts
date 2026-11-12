@@ -49,4 +49,13 @@ describe('filterChapterHtml', () => {
     expect(result.html).toContain('googlesyndication');
     expect(result.removed).toBe(0);
   });
+
+  it('leaves a long chapter alone', () => {
+    const html = `<p>${'a'.repeat(300 * 1024)}</p>`;
+
+    const result = filterChapterHtml(html, 'https://truyenfull.vn/');
+
+    expect(result.html).toBe(html);
+    expect(result.removed).toBe(0);
+  });
 });
