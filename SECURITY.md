@@ -61,6 +61,8 @@ fix before public disclosure.
 
 ## Release integrity
 
-Release APKs are built from the tagged commit by the GitHub Actions workflow.
-Verify the APK signature and compare the SHA-256 checksum published with the
-release. Do not install builds from untrusted mirrors.
+Release APKs are built from the tagged commit; CI verifies that the same commit
+passes the Rust gates, Android unit tests and lint, and that the packaged native
+libraries expose the expected JNI symbols with 16 KB page alignment. Verify the
+APK signature and compare the SHA-256 checksum published with the release. Do
+not install builds from untrusted mirrors.

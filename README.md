@@ -12,6 +12,9 @@ This is not a hardened general-purpose browser and it does not promise
 universal extraction or 100% ad blocking. It never bypasses paywalls, logins or
 certificate errors.
 
+**[Download the latest APK](https://github.com/wuwenhou/Universal-Reader/releases/latest)** —
+0.2.0 is a preview build; read the release notes before installing.
+
 ## Features
 
 - **Safe browser shell** — HTTPS-only URL policy, no JavaScript-to-native
