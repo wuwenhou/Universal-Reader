@@ -93,6 +93,13 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
+      - name: Install CMake
+        run: sdkmanager "cmake;3.31.6"
+
+      - name: Pin the CMake Version
+        run: |
+          echo "cmakeVersion=3.31.6" >> android/gradle.properties
+
       - name: Configure Release Environment
         env:
           MYANIMELIST_CLIENT_ID: ${{ vars.MYANIMELIST_CLIENT_ID }}
