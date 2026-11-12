@@ -5,6 +5,7 @@ const {
   withAndroidStyles,
   withAppBuildGradle,
   withProjectBuildGradle,
+  withGradleProperties,
   withDangerousMod,
 } = require('@expo/config-plugins');
 const fs = require('fs');
@@ -301,9 +302,49 @@ const withAndroidVariantAssets = config =>
     },
   ]);
 
+const CMAKE_VERSION_PROPERTY = 'cmakeVersion';
+
+/**
+ * Writes the CMake version into `gradle.properties`.
+ *
+ * The property is what the modules read, and it has to survive a prebuild -
+ * otherwise a fresh checkout falls back to the CMake that ships with the SDK
+ * and the native build never settles on Windows.
+ */
+const withCMakeVersionProperty = config =>
+  withGradleProperties(config, config => {
+    const properties = config.modResults;
+    const version =
+      process.env.UNIVERSAL_READER_CMAKE_VERSION ||
+      properties.find(
+        property =>
+          property.type === 'property' &&
+          property.key === CMAKE_VERSION_PROPERTY,
+      )?.value ||
+      '3.31.6';
+
+    const existing = properties.find(
+      property =>
+        property.type === 'property' && property.key === CMAKE_VERSION_PROPERTY,
+    );
+
+    if (existing) {
+      existing.value = version;
+    } else {
+      properties.push({
+        type: 'property',
+        key: CMAKE_VERSION_PROPERTY,
+        value: version,
+      });
+    }
+
+    return config;
+  });
+
 module.exports = config => {
   config = withBuildGradleCustomizations(config);
   config = withCMakeVersion(config);
+  config = withCMakeVersionProperty(config);
   config = withWindowBackgroundColors(config);
   config = withWindowBackgroundStyle(config);
   return withAndroidVariantAssets(config);
