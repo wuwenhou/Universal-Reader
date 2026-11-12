@@ -44,7 +44,12 @@ finally {
 $ndkBin = Join-Path $env:ANDROID_NDK_HOME 'toolchains\llvm\prebuilt\windows-x86_64\bin'
 $llvmNm = Join-Path $ndkBin 'llvm-nm.exe'
 $llvmReadElf = Join-Path $ndkBin 'llvm-readelf.exe'
-$expectedSymbol = 'Java_com_universalreader_app_core_NativeBridge_coreVersion'
+$expectedSymbols = @(
+    'Java_com_universalreader_app_core_NativeBridge_coreVersion',
+    'Java_com_universalreader_app_core_NativeBridge_normalizeParagraphs',
+    'Java_com_universalreader_app_core_NativeBridge_ttsChunks',
+    'Java_com_universalreader_app_core_NativeBridge_canonicalizeUrl'
+)
 
 foreach ($target in $Abi) {
     $so = Join-Path $outputDir "$target\libreader_core.so"
@@ -52,8 +57,10 @@ foreach ($target in $Abi) {
 
     if (Test-Path $llvmNm) {
         $symbols = & $llvmNm -D --defined-only $so
-        if (-not ($symbols -match [regex]::Escape($expectedSymbol))) {
-            throw "JNI symbol $expectedSymbol not found in $so"
+        foreach ($expectedSymbol in $expectedSymbols) {
+            if (-not ($symbols -match [regex]::Escape($expectedSymbol))) {
+                throw "JNI symbol $expectedSymbol not found in $so"
+            }
         }
     }
 

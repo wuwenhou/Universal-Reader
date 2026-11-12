@@ -12,10 +12,15 @@ object NativeBridge {
         System.loadLibrary("reader_core")
     }
 
-    /**
-     * Native ABI version. Must match `CORE_VERSION` in `reader-core`.
-     *
-     * Returns a negative value if the native library could not be loaded.
-     */
+    /** Native ABI version. Must match `CORE_VERSION` in `reader-core`. */
     external fun coreVersion(): Int
+
+    /** Splits text into paragraphs on blank lines. */
+    external fun normalizeParagraphs(text: String): Array<String>
+
+    /** Splits text into sentence-sized chunks for TTS. */
+    external fun ttsChunks(text: String, maxChars: Int): Array<String>
+
+    /** Returns a canonical http(s) URL, or null for invalid/unsupported URLs. */
+    external fun canonicalizeUrl(url: String): String?
 }

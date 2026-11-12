@@ -36,7 +36,12 @@ foreach ($entry in $expected) {
 $ndkBin = Join-Path $env:ANDROID_NDK_HOME 'toolchains\llvm\prebuilt\windows-x86_64\bin'
 $llvmNm = Join-Path $ndkBin 'llvm-nm.exe'
 $llvmReadElf = Join-Path $ndkBin 'llvm-readelf.exe'
-$expectedSymbol = 'Java_com_universalreader_app_core_NativeBridge_coreVersion'
+$expectedSymbols = @(
+    'Java_com_universalreader_app_core_NativeBridge_coreVersion',
+    'Java_com_universalreader_app_core_NativeBridge_normalizeParagraphs',
+    'Java_com_universalreader_app_core_NativeBridge_ttsChunks',
+    'Java_com_universalreader_app_core_NativeBridge_canonicalizeUrl'
+)
 
 $extractRoot = Join-Path ([System.IO.Path]::GetTempPath()) "universal-reader-apk-$PID"
 if (Test-Path $extractRoot) { Remove-Item -Recurse -Force $extractRoot }
@@ -48,8 +53,10 @@ try {
         $so = Join-Path $extractRoot ($entry -replace '/', '\')
         if (Test-Path $llvmNm) {
             $symbols = & $llvmNm -D --defined-only $so
-            if (-not ($symbols -match [regex]::Escape($expectedSymbol))) {
-                throw "JNI symbol missing from $entry"
+            foreach ($expectedSymbol in $expectedSymbols) {
+                if (-not ($symbols -match [regex]::Escape($expectedSymbol))) {
+                    throw "JNI symbol $expectedSymbol missing from $entry"
+                }
             }
         }
         if (Test-Path $llvmReadElf) {

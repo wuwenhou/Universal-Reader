@@ -32,7 +32,7 @@ jobs:
       - run: cargo test --workspace
 
   android:
-    name: Android debug APK
+    name: Android build and tests
     runs-on: ubuntu-latest
     needs: rust
     steps:
@@ -71,13 +71,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Assemble debug and lint
+      - name: Unit tests, debug, release and lint
         working-directory: android
-        run: ./gradlew :app:assembleDebug :app:lintDebug --console=plain
+        run: >-
+          ./gradlew :app:testDebugUnitTest :app:assembleDebug
+          :app:assembleRelease :app:lintDebug --console=plain
 
-      - name: Verify APK contents
+      - name: Verify APK contents and JNI symbols
         run: |
           set -euo pipefail
           APK=android/app/build/outputs/apk/debug/app-debug.apk
           test -f "$APK"
           unzip -l "$APK" | grep -E 'lib/(arm64-v8a|x86_64)/libreader_core\.so'
+          NDK_BIN="$ANDROID_HOME/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          for abi in arm64-v8a x86_64; do
+            unzip -p "$APK" "lib/$abi/libreader_core.so" > "/tmp/libreader_core-$abi.so"
+            "$NDK_BIN/llvm-nm" -D --defined-only "/tmp/libreader_core-$abi.so" \
+              | grep -q Java_com_universalreader_app_core_NativeBridge_canonicalizeUrl
+            "$NDK_BIN/llvm-readelf" -l "/tmp/libreader_core-$abi.so" | grep -q '0x4000'
+          done

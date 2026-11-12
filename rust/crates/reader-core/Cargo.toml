@@ -1,6 +1,6 @@
 [package]
 name = "reader-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 
@@ -9,3 +9,4 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 jni = "0.21"
+url = "2"

@@ -13,8 +13,11 @@ bảng phiên bản và ghi lý do vào PR.
 | AGP | 8.7.3 | |
 | Kotlin | 2.0.21 + Compose compiler plugin | |
 | Compose | ui/foundation 1.7.5, material3 1.3.1 | |
-| compileSdk / targetSdk | 35 | |
+| Lifecycle | viewmodel/runtime-compose 2.8.7 | `collectAsStateWithLifecycle`, `viewModelScope` |
+| Coroutines | kotlinx-coroutines-android 1.9.0 | TTS/library state |
+| compileSdk / targetSdk | 35 | AGP 8.7.3 hỗ trợ tối đa compileSdk 35 |
 | minSdk | 26 | Android 8.0+ |
+| App version | `versionCode 2`, `versionName 0.2.0` | SemVer, tăng mỗi release |
 | Android SDK | `C:\Users\OWG\android-sdk` | platforms 34/35/36, build-tools 35/36 |
 | NDK | **28.2.13676358** | Khai báo `ndkVersion` trong `app/build.gradle.kts` |
 | Rust (mặc định) | stable-x86_64-pc-windows-**msvc** 1.98.1 | Không dùng để build do thiếu MSVC linker |
@@ -108,14 +111,25 @@ Sau đó kiểm tra:
 
 `jniLibs/` là output, không commit.
 
-### 3.3 Build APK
+### 3.3 Build APK và chạy unit test
 
 ```powershell
 cd android
+.\gradlew.bat :app:testDebugUnitTest --console=plain
 .\gradlew.bat :app:assembleDebug --console=plain
 ```
 
 APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
+Kết quả test: `android/app/build/test-results/testDebugUnitTest/`.
+
+Build release (R8 + shrink resources; không ký nếu thiếu `UR_KEYSTORE`):
+
+```powershell
+.\gradlew.bat :app:assembleRelease --console=plain
+```
+
+APK: `android/app/build/outputs/apk/release/app-release.apk` (có ký) hoặc
+`app-release-unsigned.apk` (không có keystore).
 
 ### 3.4 Build tất cả + verify
 
@@ -123,7 +137,8 @@ APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 .\tools\build-all.cmd
 ```
 
-Tương đương: native → `assembleDebug` → `verify-apk.ps1`.
+Tương đương: native → `testDebugUnitTest` → `assembleDebug` → `verify-apk.ps1`.
+Script kiểm tra cả 4 symbol JNI và căn chỉnh `0x4000`.
 
 ### 3.5 Cài lên thiết bị
 
@@ -134,7 +149,9 @@ $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
 & $adb shell am start -n com.universalreader.app/.MainActivity
 ```
 
-Nghiệm thu M1: tiêu đề hiển thị `core v1`.
+Nghiệm thu M1/M2: mở Settings, dòng native hiển thị `Native core: v2 · JNI OK`.
+Sau đó thử: mở một bài viết, bấm **Đọc**, kiểm tra reader; bấm **Đọc** trong
+reader để nghe TTS; tắt màn hình và kiểm tra notification/media controls.
 
 ## 4. Quality gates
 
@@ -145,10 +162,13 @@ Chạy trước mỗi PR/merge. Mục tiêu: **không có lỗi mới**, warning
 | Rust format | `cargo +stable-x86_64-pc-windows-gnu fmt --all -- --check` | Có |
 | Rust lint | `cargo +stable-x86_64-pc-windows-gnu clippy --workspace --all-targets -- -D warnings` | Có |
 | Rust test | `cargo +stable-x86_64-pc-windows-gnu test --workspace` | Có |
+| Android unit test | `.\gradlew.bat :app:testDebugUnitTest` | Có |
 | Android lint | `.\gradlew.bat :app:lintDebug` | Có |
-| APK build | `.\gradlew.bat :app:assembleDebug` | Có |
+| APK debug | `.\gradlew.bat :app:assembleDebug` | Có |
+| APK release (R8) | `.\gradlew.bat :app:assembleRelease` | Có |
 | APK verify | `.\tools\verify-apk.ps1` | Có |
 | Device smoke | cài + mở app + `adb logcat` không crash | Có (M1+) |
+| TTS device test | screen-off 30 phút, audio focus, rút tai nghe | Có (M3+) |
 | Instrumented test | `.\gradlew.bat :app:connectedDebugAndroidTest` | Khi có test |
 
 Chạy nhanh toàn bộ gate Rust:
@@ -183,9 +203,32 @@ cargo +stable-x86_64-pc-windows-gnu test --workspace
 - Keystore đặt **ngoài repo**; không commit `*.jks`/`*.keystore`.
 - Gradle release đọc biến môi trường:
   `UR_KEYSTORE`, `UR_KEYSTORE_PASSWORD`, `UR_KEY_ALIAS`, `UR_KEY_PASSWORD`.
-- Không log mật khẩu/khóa.
-- Trước release: chạy `verify-apk.ps1`, kiểm tra `apksigner verify --verbose`.
-- Bật R8/minify và kiểm tra crash trên bản release.
+- Không log mật khẩu/khóa. Nếu biến môi trường từng bị in ra log, hãy tạo key mới.
+- Tạo keystore mới (một lần; lưu file + mật khẩu ở nơi an toàn):
+
+```powershell
+keytool -genkeypair -v -keystore "$env:USERPROFILE\keys\universal-reader-release.jks" `
+  -alias universal-reader -keyalg RSA -keysize 4096 -validity 10000 `
+  -storetype PKCS12
+```
+
+- Build có ký:
+
+```powershell
+$env:UR_KEYSTORE = "$env:USERPROFILE\keys\universal-reader-release.jks"
+$env:UR_KEYSTORE_PASSWORD = '<store-password>'
+$env:UR_KEY_ALIAS = 'universal-reader'
+$env:UR_KEY_PASSWORD = '<key-password>'
+cd android
+.\gradlew.bat :app:assembleRelease --console=plain
+```
+
+- Trước release: chạy `verify-apk.ps1 -Apk <release.apk>`, kiểm tra
+  `apksigner verify --verbose`, và lưu mapping R8 để đọc crash stack trace.
+- R8/minify + shrink resources đã bật; keep rule cho JNI nằm trong
+  `android/app/proguard-rules.pro`.
+- APK debug dùng debug key; không phát hành production bằng debug key.
+- Nếu đổi signing key, người dùng cũ phải gỡ app trước khi cài bản mới.
 
 ## 8. CI
 
@@ -193,7 +236,8 @@ Workflow mẫu: `.github/workflows/ci.yml`.
 
 - Job `rust`: fmt, clippy, test trên Ubuntu.
 - Job `android`: JDK 21, Android SDK 35, NDK 28.2, Rust targets, cargo-ndk,
-  build native, `assembleDebug`, `lintDebug`, verify APK.
+  build native, `testDebugUnitTest`, `assembleDebug`, `assembleRelease`,
+  `lintDebug`, verify 4 JNI symbol + 16 KB alignment.
 - Dùng `android-actions/setup-android@v4`: v3 cài package `tools` mặc định,
   nhưng package này đã bị xóa khỏi SDK repository (lỗi `Failed to find package 'tools'`).
 - `android/gradlew` phải có mode `100755` trong git; nếu không runner báo
@@ -216,13 +260,19 @@ Workflow mẫu: `.github/workflows/ci.yml`.
 | CI: `Failed to find package 'tools'` | `setup-android@v3` cài package `tools` đã bị xóa | Dùng `setup-android@v4` |
 | Emulator không boot / quá chậm | Không có hypervisor | Dùng máy thật; hoặc bật WHPX/AEHD (admin + reboot) |
 | `core v-1` trên app | `.so` thiếu hoặc sai ABI | Chạy `build-native.ps1`, kiểm tra `jniLibs` |
+| TTS báo thiếu giọng tiếng Việt | Máy chưa cài voice `vi-VN` | Cài trong Settings → Language & input → Text-to-speech |
+| TTS dừng sau một câu | Thiếu `UtteranceProgressListener` (đã sửa ở 0.2.0) | Kiểm tra logcat tag `TextToSpeech` |
+| Release crash `UnsatisfiedLinkError` | R8 đổi tên class/method JNI | Giữ rule trong `proguard-rules.pro` |
+| APK release `unsigned` | Chưa set `UR_KEYSTORE` | Set 4 biến môi trường rồi build lại |
 
 ## 10. Checklist trước merge
 
 - [ ] `tools/build-all.cmd` chạy thành công.
 - [ ] 4 gate Rust ở mục 4 pass.
+- [ ] `testDebugUnitTest` pass (27 test ở 0.2.0).
 - [ ] `lintDebug` không có error mới.
-- [ ] `verify-apk.ps1` pass (symbol + 16 KB).
+- [ ] `assembleRelease` pass (R8/minify).
+- [ ] `verify-apk.ps1` pass (4 symbol + 16 KB).
 - [ ] Không có secret/key/keystore trong diff.
 - [ ] Cập nhật PLAN.md nếu thay đổi phạm vi/gate.
 - [ ] Cập nhật BUILD.md nếu thay đổi toolchain/command.

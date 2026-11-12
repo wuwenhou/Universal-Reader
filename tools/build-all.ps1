@@ -1,4 +1,4 @@
-# One-command local build: native libraries -> debug APK -> APK verification.
+# One-command local build: native libraries -> unit tests -> debug APK -> verification.
 #
 # Usage:
 #   .\tools\build-all.ps1
@@ -20,7 +20,7 @@ if (-not $SkipNative) {
 $androidDir = Join-Path (Split-Path -Parent $PSScriptRoot) 'android'
 Push-Location $androidDir
 try {
-    & .\gradlew.bat :app:assembleDebug --console=plain
+    & .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug --console=plain
     if ($LASTEXITCODE -ne 0) { throw "Gradle failed with exit code $LASTEXITCODE" }
 }
 finally {
