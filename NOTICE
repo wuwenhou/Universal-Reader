@@ -3,26 +3,16 @@ Copyright (C) 2024 wuwenhou
 
 This product is a fork of LNReader.
 
+Upstream project
+----------------
+
 LNReader
 Copyright (c) 2021 Rajarshee Chatterjee
 Licensed under the MIT License.
 
-The following files are derived from LNReader and remain under the MIT
-license:
-
-    src/api/**
-    src/components/**
-    src/database/**
-    src/hooks/**
-    src/i18n/**
-    src/navigators/**
-    src/plugins/**
-    src/screens/**
-    src/services/**
-    src/theme/**
-    src/utils/**
-    assets/**
-    modules/**
+The upstream MIT license and copyright notice are preserved in the LICENSE
+file. The MIT license is compatible with the GPL-3.0, so the upstream code
+can be redistributed as part of this project.
 
 Third party components
 ----------------------
