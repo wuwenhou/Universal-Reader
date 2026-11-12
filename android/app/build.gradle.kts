@@ -29,6 +29,12 @@ android {
                 storePassword = System.getenv("UR_KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("UR_KEY_ALIAS")
                 keyPassword = System.getenv("UR_KEY_PASSWORD")
+                // minSdk 26 supports APK Signature Scheme v2; v3 is used on
+                // Android 9+ and enables future key rotation. JAR signing (v1)
+                // is unnecessary for this minimum and only adds size.
+                enableV1Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }

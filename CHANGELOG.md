@@ -36,6 +36,8 @@ production release.
 
 - `versionCode` 2, `versionName` 0.2.0.
 - R8/minify and resource shrinking enabled for release builds, with JNI keep rules.
+- Release APKs are signed with APK Signature Scheme v2 and v3 (v1 disabled for
+  `minSdk 26`).
 - WebView user agent now includes the app version.
 - CI runs unit tests, builds debug and release APKs, and verifies all four JNI
   symbols plus 16 KB page alignment.

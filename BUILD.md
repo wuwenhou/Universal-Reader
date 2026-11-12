@@ -228,6 +228,8 @@ cd android
 - R8/minify + shrink resources đã bật; keep rule cho JNI nằm trong
   `android/app/proguard-rules.pro`.
 - APK debug dùng debug key; không phát hành production bằng debug key.
+- APK release dùng APK Signature Scheme v2 (API 24+) và v3 (API 28+); v1 bị tắt
+  vì `minSdk 26`. `apksigner verify` phải báo v2 và v3 `true`.
 - Nếu đổi signing key, người dùng cũ phải gỡ app trước khi cài bản mới.
 
 ## 8. CI
