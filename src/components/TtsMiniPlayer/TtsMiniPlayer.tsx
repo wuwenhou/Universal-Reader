@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
-import { IconButtonV2 } from '@components';
+import IconButtonV2 from '../IconButtonV2/IconButtonV2';
 import { useTheme } from '@hooks/persisted';
 import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
 

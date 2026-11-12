@@ -31,6 +31,7 @@ class TestElement {
 type TtsTraversal = {
   getAllReadableElements(element: TestElement): TestElement[];
   normalizeText(text: string): string;
+  splitSentences(text: string): string[];
 };
 
 const text = (value: string): TestNode => ({
@@ -183,5 +184,49 @@ describe('reader TTS traversal', () => {
       'First paragraph',
       'Second paragraph',
     ]);
+  });
+
+  describe('sentence splitting', () => {
+    const tts = loadTtsTraversal(element('div'));
+
+    it('splits a paragraph at the sentence end', () => {
+      expect(tts.splitSentences('First sentence. Second sentence.')).toEqual([
+        'First sentence.',
+        'Second sentence.',
+      ]);
+    });
+
+    it('keeps a run of punctuation with its sentence', () => {
+      expect(tts.splitSentences('Really?! Yes.')).toEqual(['Really?!', 'Yes.']);
+    });
+
+    it('keeps a closing quote with its sentence', () => {
+      expect(tts.splitSentences('He said "stop." Then he left.')).toEqual([
+        'He said "stop."',
+        'Then he left.',
+      ]);
+    });
+
+    it('does not split on a decimal number', () => {
+      expect(tts.splitSentences('The value is 3.14 today.')).toEqual([
+        'The value is 3.14 today.',
+      ]);
+    });
+
+    it('keeps text without a sentence end as one sentence', () => {
+      expect(tts.splitSentences('No ending here')).toEqual(['No ending here']);
+    });
+
+    it('returns nothing for empty text', () => {
+      expect(tts.splitSentences('')).toEqual([]);
+    });
+
+    it('splits Vietnamese text', () => {
+      expect(tts.splitSentences('Câu một. Câu hai! Câu ba?')).toEqual([
+        'Câu một.',
+        'Câu hai!',
+        'Câu ba?',
+      ]);
+    });
   });
 });

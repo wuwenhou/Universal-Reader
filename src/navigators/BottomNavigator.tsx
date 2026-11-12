@@ -17,6 +17,7 @@ import { BottomNavigatorParamList } from './types';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import { MaterialDesignIconName } from '@type/icon';
 import { BottomTabBar } from '@components';
+import { navigationRef } from './ShareIntentHandler';
 
 const Tab = createBottomTabNavigator<BottomNavigatorParamList>();
 
@@ -70,6 +71,7 @@ const BottomNavigator = () => {
         theme={theme}
         showLabelsInNav={showLabelsInNav}
         renderIcon={renderIcon}
+        onOpenPlayer={() => navigationRef.navigate('Player')}
       />
     ),
     [theme, showLabelsInNav, renderIcon],

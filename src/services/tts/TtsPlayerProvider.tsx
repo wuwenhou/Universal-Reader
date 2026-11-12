@@ -15,6 +15,7 @@ import {
   TtsSession,
   TtsSettings,
 } from '@modules/nitro-tts';
+import { askForPostNotificationsPermission } from '@utils/askForPostNoftificationsPermission';
 
 export type TtsCommand =
   | 'next'
@@ -195,6 +196,19 @@ export const TtsPlayerProvider = ({
           },
           settings,
         );
+
+        // The playback service shows a notification, which needs the
+        // permission on Android 13 and newer. The request is not awaited:
+        // a denied permission must not stop the narration, it only means no
+        // notification is shown.
+        void (async () => {
+          try {
+            await askForPostNotificationsPermission();
+          } catch {
+            // The permission is optional, so a failure is ignored.
+          }
+        })();
+
         await session.play();
       });
     },

@@ -13,6 +13,7 @@ import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
 interface PlayerTocScreenProps {
   navigation: {
     goBack: () => void;
+    navigate: (screen: string, params?: object) => void;
   };
 }
 
@@ -69,6 +70,25 @@ const PlayerTocScreen = ({ navigation }: PlayerTocScreenProps) => {
       return (
         <Pressable
           key={chapter.id}
+          onPress={() => {
+            if (isCurrent) {
+              navigation.goBack();
+              return;
+            }
+
+            navigation.navigate('ReaderStack', {
+              screen: 'Chapter',
+              params: {
+                novel: {
+                  id: novelId,
+                  name: metadata?.novelName,
+                  pluginId: metadata?.pluginId,
+                  cover: metadata?.coverUri ?? null,
+                },
+                chapter,
+              },
+            });
+          }}
           style={[
             styles.chapter,
             isCurrent && { backgroundColor: theme.surfaceVariant },
@@ -87,7 +107,15 @@ const PlayerTocScreen = ({ navigation }: PlayerTocScreenProps) => {
         </Pressable>
       );
     },
-    [metadata?.chapterId, theme],
+    [
+      metadata?.chapterId,
+      metadata?.coverUri,
+      metadata?.novelName,
+      metadata?.pluginId,
+      navigation,
+      novelId,
+      theme,
+    ],
   );
 
   if (!novelId) {

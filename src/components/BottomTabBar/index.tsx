@@ -6,9 +6,12 @@ import { ThemeColors } from '@theme/types';
 import Animated from 'react-native-reanimated';
 import Color from 'color';
 
+import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
+
 interface CustomBottomTabBarProps extends BottomTabBarProps {
   theme: ThemeColors;
   showLabelsInNav: boolean;
+  onOpenPlayer: () => void;
   renderIcon: ({
     color,
     route,
@@ -25,9 +28,18 @@ function CustomBottomTabBar({
   insets,
   theme,
   showLabelsInNav,
+  onOpenPlayer,
   renderIcon,
 }: CustomBottomTabBarProps) {
   const transparentBg = Color(theme.primaryContainer).fade(1).rgb().toString();
+  const {
+    state: ttsState,
+    metadata,
+    currentSentence,
+    command,
+    hasQueue,
+  } = useTtsPlayer();
+  const isPlaying = ttsState === 'playing';
   const getLabelText = useCallback(
     (route: any) => {
       if (!showLabelsInNav && route.name !== state.routeNames[state.index]) {
@@ -48,96 +60,142 @@ function CustomBottomTabBar({
   );
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.surface2 || theme.surface,
-          paddingBottom: 16 + (insets?.bottom || 0),
-        },
-      ]}
-    >
-      {state.routes.map((route, index) => {
-        const label = getLabelText(route);
-        const isFocused = state.index === index;
-        const showLabel = (showLabelsInNav || isFocused) && label;
-
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
-          }
-        };
-
-        const onLongPress = () => {
-          navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-          });
-        };
-
-        const iconColor = isFocused
-          ? theme.onPrimaryContainer
-          : theme.onSurfaceVariant;
-
-        return (
-          <Pressable
-            key={route.key}
-            onPress={onPress}
-            onLongPress={onLongPress}
-            style={styles.pressable}
-          >
-            {/* Icon */}
-            <View
+    <View>
+      {hasQueue ? (
+        <Pressable
+          onPress={onOpenPlayer}
+          style={[
+            styles.miniPlayer,
+            {
+              backgroundColor: theme.surfaceVariant,
+              borderTopColor: theme.outline,
+            },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={metadata?.chapterName ?? 'Player'}
+        >
+          <View style={styles.miniPlayerText}>
+            <Text
+              numberOfLines={1}
+              style={[styles.miniPlayerTitle, { color: theme.onSurface }]}
+            >
+              {metadata?.chapterName ?? ''}
+            </Text>
+            <Text
+              numberOfLines={1}
               style={[
-                styles.iconContainer,
-                { marginBottom: showLabel ? 4 : 20 },
+                styles.miniPlayerSubtitle,
+                { color: theme.onSurfaceVariant },
               ]}
             >
-              {/* The indicator is absolutely positioned and animated with a
+              {currentSentence}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => command(isPlaying ? 'pause' : 'play')}
+            style={styles.miniPlayerButton}
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
+          >
+            <Text style={{ color: theme.onSurface }}>
+              {isPlaying ? '❚❚' : '▶'}
+            </Text>
+          </Pressable>
+        </Pressable>
+      ) : null}
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.surface2 || theme.surface,
+            paddingBottom: 16 + (insets?.bottom || 0),
+          },
+        ]}
+      >
+        {state.routes.map((route, index) => {
+          const label = getLabelText(route);
+          const isFocused = state.index === index;
+          const showLabel = (showLabelsInNav || isFocused) && label;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            });
+          };
+
+          const iconColor = isFocused
+            ? theme.onPrimaryContainer
+            : theme.onSurfaceVariant;
+
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              style={styles.pressable}
+            >
+              {/* Icon */}
+              <View
+                style={[
+                  styles.iconContainer,
+                  { marginBottom: showLabel ? 4 : 20 },
+                ]}
+              >
+                {/* The indicator is absolutely positioned and animated with a
                   transform so that growing it never re-runs layout, which
                   would otherwise make the icon and label tremble sideways as
                   their rounded pixel positions shift on every frame. */}
-              <Animated.View
-                style={[
-                  styles.indicator,
-                  {
-                    transitionProperty: ['transform', 'backgroundColor'],
-                    transitionDuration: 250,
-                    transitionTimingFunction: 'ease-in-out',
-                    transform: [{ scaleX: isFocused ? 1 : 0.5 }],
-                    backgroundColor: isFocused
-                      ? theme.primaryContainer
-                      : transparentBg,
-                  },
-                ]}
-              />
-              {renderIcon({ color: iconColor, route })}
-            </View>
+                <Animated.View
+                  style={[
+                    styles.indicator,
+                    {
+                      transitionProperty: ['transform', 'backgroundColor'],
+                      transitionDuration: 250,
+                      transitionTimingFunction: 'ease-in-out',
+                      transform: [{ scaleX: isFocused ? 1 : 0.5 }],
+                      backgroundColor: isFocused
+                        ? theme.primaryContainer
+                        : transparentBg,
+                    },
+                  ]}
+                />
+                {renderIcon({ color: iconColor, route })}
+              </View>
 
-            {/* Label */}
-            {showLabel ? (
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: isFocused ? theme.onSurface : theme.onSurfaceVariant,
-                    fontWeight: '500',
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
-            ) : null}
-          </Pressable>
-        );
-      })}
+              {/* Label */}
+              {showLabel ? (
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      color: isFocused
+                        ? theme.onSurface
+                        : theme.onSurfaceVariant,
+                      fontWeight: '500',
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -152,6 +210,23 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingHorizontal: 0,
     minHeight: 80,
+  },
+  miniPlayer: {
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  miniPlayerText: { flex: 1 },
+  miniPlayerTitle: { fontSize: 13, fontWeight: '600' },
+  miniPlayerSubtitle: { fontSize: 12 },
+  miniPlayerButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
   pressable: {
     flex: 1,

@@ -42,6 +42,7 @@ import {
   MAX_CHAPTER_HTML_LENGTH,
   withTimeout,
 } from '../utils/limits';
+import { getErrorMessage } from '@utils/error';
 import { useNovelActions, useNovelValue } from '@screens/novel/NovelContext';
 import useTimeTracking from './useTimeTracking';
 import { useEventListener } from 'expo';
@@ -397,7 +398,9 @@ export default function useChapter(
         if (isStale()) {
           return;
         }
-        setError(e.message);
+        // The message has to be a string: the error screen renders it, and a
+        // rejection with a non-error value would leave the reader blank.
+        setError(getErrorMessage(e));
         setLoading(false);
       }
     },

@@ -37,6 +37,7 @@ import {
 } from '../utils/sanitizeChapterText';
 import { useAdblock } from '@hooks/useAdblock';
 import { adblockService } from '@services/adblock/adblockService';
+import { getInsecureSourceExceptions } from '@services/network';
 import { useTtsPlayer } from '@services/tts/TtsPlayerProvider';
 import { toNativeTtsSettings } from '@utils/tts';
 
@@ -125,19 +126,29 @@ const assetsUriPrefix = __DEV__
  * page is not allowed to pull scripts, frames or objects from anywhere. Only
  * images and media over HTTPS (plus `data:` for inline assets) are loaded.
  */
-const readerCsp = [
-  "default-src 'none'",
-  "img-src 'self' data: blob: https: file:",
-  "media-src 'self' data: blob: https: file:",
-  "style-src 'self' 'unsafe-inline' file: https: http://localhost:8081",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' file: http://localhost:8081",
-  "font-src 'self' data: file:",
-  "connect-src 'self' https: file:",
-  "frame-src 'none'",
-  "object-src 'none'",
-  "base-uri 'none'",
-  "form-action 'none'",
-].join('; ');
+const buildReaderCsp = (): string => {
+  const insecureSources = getInsecureSourceExceptions()
+    .map(hostname => `http://${hostname}`)
+    .join(' ');
+
+  return [
+    "default-src 'none'",
+    `img-src 'self' data: blob: https: file:${
+      insecureSources ? ` ${insecureSources}` : ''
+    }`,
+    `media-src 'self' data: blob: https: file:${
+      insecureSources ? ` ${insecureSources}` : ''
+    }`,
+    "style-src 'self' 'unsafe-inline' file: https: http://localhost:8081",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' file: http://localhost:8081",
+    "font-src 'self' data: file:",
+    "connect-src 'self' https: file:",
+    "frame-src 'none'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'none'",
+  ].join('; ');
+};
 
 const WebViewReader: React.FC<WebViewReaderProps> = ({
   onPress,
@@ -380,7 +391,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
           <html dir="${readerDir}">
             <head>
               <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-              <meta http-equiv="Content-Security-Policy" content="${readerCsp}">
+              <meta http-equiv="Content-Security-Policy" content="${buildReaderCsp()}">
               <link rel="stylesheet" href="${assetsUriPrefix}/css/index.css">
               <link rel="stylesheet" href="${assetsUriPrefix}/css/pageReader.css">
               <link rel="stylesheet" href="${assetsUriPrefix}/css/toolWrapper.css">
