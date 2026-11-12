@@ -127,15 +127,15 @@ const CMAKE_VERSION_BLOCK = `${CMAKE_VERSION_MARKER}
 //
 // The version can be overridden with the cmakeVersion property.
 subprojects {
-  plugins.withId("com.android.library") {
-    // The version has to be set before the module reads it, but after the
-    // module declared its own externalNativeBuild. Hooking into the
-    // evaluation does both.
-    //
-    // Only the modules that build native code are touched: the other
-    // libraries have no CMake build and configuring them breaks the
-    // variant lookup.
-    beforeEvaluate { project ->
+  // The version has to be set before the module reads it, and after the
+  // module declared its own externalNativeBuild. Registering the hook before
+  // the evaluation and applying it when the plugin shows up does both.
+  //
+  // Only the modules that build native code are touched: the other
+  // libraries have no CMake build and configuring them breaks the variant
+  // lookup.
+  beforeEvaluate { project ->
+    project.plugins.withId("com.android.library") {
       if (!project.file("CMakeLists.txt").exists()) {
         return
       }
