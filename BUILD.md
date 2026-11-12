@@ -36,6 +36,17 @@ Install it with the SDK manager:
 sdkmanager "cmake;3.31.6"
 ```
 
+### Room and SQLiteJDBC
+
+The `native-background-tasks` module uses Room, whose annotation processor
+needs the SQLiteJDBC native library. The processor unpacks it into a
+temporary directory, which does not always work for the KAPT worker on
+Windows. The config plugin therefore unpacks the library into the build
+directory and points the processor at it.
+
+The unpacked library is only needed for a local build; it is created by the
+`unpackSqliteNative` task and is not part of the repository.
+
 ## Setup
 
 ```bash
